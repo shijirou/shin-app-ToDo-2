@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trello風タスクボード</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>Trello風タスクボード</h1>
+  </header>
+
+  <main class="board" id="board">
+    <!-- リストはJSで動的に生成 -->
+    <div class="add-list">
+      <button id="add-list-btn">+ リストを追加</button>
+    </div>
+  </main>
+
+  <!-- カード追加モーダル -->
+  <div class="modal-overlay" id="add-card-modal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>カードを追加</h2>
+        <button class="modal-close" data-close="add-card-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="add-card-list-select">追加先リスト</label>
+        <select id="add-card-list-select"></select>
+
+        <label for="add-card-content">内容</label>
+        <input type="text" id="add-card-content" placeholder="カードの内容を入力">
+        <p class="error-message" id="add-card-error" hidden>内容を入力してください</p>
+      </div>
+      <div class="modal-footer">
+        <button id="add-card-submit" class="btn-primary">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- カード編集モーダル -->
+  <div class="modal-overlay" id="edit-card-modal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>カードを編集</h2>
+        <button class="modal-close" data-close="edit-card-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="edit-card-content">内容</label>
+        <input type="text" id="edit-card-content">
+        <p class="error-message" id="edit-card-error" hidden>内容を入力してください</p>
+      </div>
+      <div class="modal-footer modal-footer-split">
+        <button id="edit-card-delete" class="btn-danger">削除</button>
+        <button id="edit-card-save" class="btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
