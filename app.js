@@ -15,11 +15,15 @@ const addCardSubmit = document.getElementById('add-card-submit');
 const editCardModal = document.getElementById('edit-card-modal');
 const editCardContent = document.getElementById('edit-card-content');
 const editCardError = document.getElementById('edit-card-error');
+const editCardPriority = document.getElementById('edit-card-priority');
 const editCardSave = document.getElementById('edit-card-save');
 const editCardDelete = document.getElementById('edit-card-delete');
 let editingCardId = null;
 
 let draggingCardId = null;
+let draggingListId = null;
+
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -52,8 +56,8 @@ function render() {
   // 既存のリスト要素を削除(add-listボタンは残す)
   boardEl.querySelectorAll('.list').forEach((el) => el.remove());
 
-  state.lists.forEach((list) => {
-    const listEl = buildListEl(list);
+  state.lists.forEach((list, index) => {
+    const listEl = buildListEl(list, index, state.lists.length);
     boardEl.insertBefore(listEl, document.querySelector('.add-list'));
   });
 
@@ -67,10 +71,36 @@ function render() {
   });
 }
 
-function buildListEl(list) {
+function getListTierClass(index, total) {
+  const tier = Math.min(2, Math.floor((index / total) * 3));
+  return ['list-tier-high', 'list-tier-medium', 'list-tier-low'][tier];
+}
+
+function buildListEl(list, index, total) {
   const listEl = document.createElement('div');
-  listEl.className = 'list';
+  listEl.className = `list ${getListTierClass(index, total)}`;
   listEl.dataset.listId = list.id;
+  listEl.draggable = true;
+
+  listEl.addEventListener('dragstart', (e) => {
+    e.stopPropagation();
+    draggingListId = list.id;
+    listEl.classList.add('list-dragging');
+  });
+  listEl.addEventListener('dragend', () => {
+    draggingListId = null;
+    listEl.classList.remove('list-dragging');
+  });
+  listEl.addEventListener('dragover', (e) => {
+    if (!draggingListId) return;
+    e.preventDefault();
+  });
+  listEl.addEventListener('drop', (e) => {
+    if (!draggingListId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    handleListDrop(list.id);
+  });
 
   const header = document.createElement('div');
   header.className = 'list-header';
@@ -89,6 +119,15 @@ function buildListEl(list) {
     render();
   });
 
+  const sortBtn = document.createElement('button');
+  sortBtn.className = 'list-sort-btn';
+  sortBtn.textContent = '⇅';
+  sortBtn.title = '優先順位でソート';
+  sortBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sortCardsByPriority(list.id);
+  });
+
   const menuWrap = document.createElement('div');
   menuWrap.style.position = 'relative';
 
@@ -104,20 +143,25 @@ function buildListEl(list) {
 
   menuWrap.appendChild(menuBtn);
   header.appendChild(title);
+  header.appendChild(sortBtn);
   header.appendChild(menuWrap);
   listEl.appendChild(header);
 
   const cardsEl = document.createElement('div');
   cardsEl.className = 'cards';
   cardsEl.addEventListener('dragover', (e) => {
+    if (draggingListId) return;
     e.preventDefault();
+    e.stopPropagation();
     listEl.classList.add('drag-over');
   });
   cardsEl.addEventListener('dragleave', () => {
     listEl.classList.remove('drag-over');
   });
   cardsEl.addEventListener('drop', (e) => {
+    if (draggingListId) return;
     e.preventDefault();
+    e.stopPropagation();
     listEl.classList.remove('drag-over');
     handleDrop(list.id, e, cardsEl);
   });
@@ -135,6 +179,31 @@ function buildListEl(list) {
   listEl.appendChild(addCardBtn);
 
   return listEl;
+}
+
+function handleListDrop(targetListId) {
+  if (!draggingListId || draggingListId === targetListId) return;
+  const fromIndex = state.lists.findIndex((l) => l.id === draggingListId);
+  const toIndex = state.lists.findIndex((l) => l.id === targetListId);
+  if (fromIndex === -1 || toIndex === -1) return;
+  const [moved] = state.lists.splice(fromIndex, 1);
+  state.lists.splice(toIndex, 0, moved);
+  saveState();
+  render();
+}
+
+function sortCardsByPriority(listId) {
+  const cards = getCardsForList(listId);
+  cards.sort((a, b) => {
+    const pa = PRIORITY_ORDER[a.priority] ?? 3;
+    const pb = PRIORITY_ORDER[b.priority] ?? 3;
+    return pa - pb;
+  });
+  cards.forEach((card, i) => {
+    card.order = i;
+  });
+  saveState();
+  render();
 }
 
 function buildListMenu(list) {
@@ -172,9 +241,15 @@ function getCardsForList(listId) {
 function buildCardEl(card) {
   const el = document.createElement('div');
   el.className = 'card';
-  el.textContent = card.content;
   el.draggable = true;
   el.dataset.cardId = card.id;
+
+  const badge = document.createElement('span');
+  badge.className = `priority-badge priority-${card.priority || 'none'}`;
+  const text = document.createElement('span');
+  text.textContent = card.content;
+  el.appendChild(badge);
+  el.appendChild(text);
 
   el.addEventListener('dragstart', () => {
     draggingCardId = card.id;
@@ -259,7 +334,7 @@ addCardSubmit.addEventListener('click', () => {
   }
   const listId = addCardListSelect.value;
   const order = getCardsForList(listId).length;
-  state.cards.push({ id: uid(), listId, content, order });
+  state.cards.push({ id: uid(), listId, content, order, priority: null });
   saveState();
   render();
   addCardModal.hidden = true;
@@ -271,6 +346,7 @@ function openEditCardModal(cardId) {
   if (!card) return;
   editingCardId = cardId;
   editCardContent.value = card.content;
+  editCardPriority.value = card.priority || '';
   editCardError.hidden = true;
   editCardModal.hidden = false;
   editCardContent.focus();
@@ -285,6 +361,7 @@ editCardSave.addEventListener('click', () => {
   const card = state.cards.find((c) => c.id === editingCardId);
   if (card) {
     card.content = content;
+    card.priority = editCardPriority.value || null;
     saveState();
     render();
   }

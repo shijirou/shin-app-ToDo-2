@@ -43,6 +43,22 @@ body {
   outline: 2px dashed #0079bf;
 }
 
+.list.list-dragging {
+  opacity: 0.4;
+}
+
+.list-tier-high {
+  outline: 1px solid #eb5a46;
+}
+
+.list-tier-medium {
+  outline: 1px solid #f2d600;
+}
+
+.list-tier-low {
+  outline: 1px solid #a8e6a3;
+}
+
 .list-header {
   display: flex;
   align-items: center;
@@ -66,7 +82,8 @@ body {
   outline: none;
 }
 
-.list-menu-btn {
+.list-menu-btn,
+.list-sort-btn {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -74,9 +91,11 @@ body {
   padding: 2px 6px;
   border-radius: 3px;
   position: relative;
+  flex-shrink: 0;
 }
 
-.list-menu-btn:hover {
+.list-menu-btn:hover,
+.list-sort-btn:hover {
   background: #ddd;
 }
 
@@ -121,6 +140,33 @@ body {
   cursor: grab;
   font-size: 14px;
   word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priority-badge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.priority-badge.priority-high {
+  background: #eb5a46;
+}
+
+.priority-badge.priority-medium {
+  background: #f2d600;
+}
+
+.priority-badge.priority-low {
+  background: #a8e6a3;
+}
+
+.priority-badge.priority-none {
+  background: #c9ccd1;
 }
 
 .card:hover {
