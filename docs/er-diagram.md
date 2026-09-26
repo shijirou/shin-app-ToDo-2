@@ -56,4 +56,4 @@ erDiagram
 }
 ```
 
-関連: [機能8 データの永続化](../README.md#func-8) / [非機能要件](../README.md#sec-nfr)
+関連: [機能8 データの永続化](../README.md#func-8) / [非機能要件](../README.md#非機能要件)
