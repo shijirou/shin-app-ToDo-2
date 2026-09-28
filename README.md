@@ -50,7 +50,7 @@
 | フレームワーク | React |
 | ビルドツール | Vite |
 | ドラッグ&ドロップ | dnd-kit |
-| スタイリング | CSS Modules |
+| スタイリング | Tailwind CSS |
 
 **2. バックエンド**
 
@@ -59,6 +59,7 @@
 | 言語・フレームワーク | Java + Spring Boot |
 | API形式 | REST API |
 | データベース接続 | Spring Data JPA |
+| ビルドツール | Gradle |
 
 **3. データベース**
 
@@ -72,16 +73,16 @@
 |---|---|
 | バージョン管理 | Git + GitHub |
 | パッケージ管理（フロントエンド） | npm |
-| パッケージ管理・ビルド（バックエンド） | Maven |
+| パッケージ管理（バックエンド） | Gradle |
 
 **選定理由（指示で決まっていないもの）**
 - TypeScript: React と組み合わせるときの標準的な言語。型があるので、Java と同じくミスに早く気づける
 - Vite: React の開発環境を作る標準的なツール（Next.js を使わない場合の定番）
 - dnd-kit: React 向けのドラッグ&ドロップ用ライブラリ（vuedraggable は Vue.js 用のため不採用）
-- CSS Modules: 普通の CSS の書き方のまま使えるため、今のプロトタイプの style.css を活かしやすい
+- Tailwind CSS: HTML（React の部品）に短い名前（例: `p-4` `bg-white`）を並べるだけで見た目を整えられるため、CSS ファイルを別に書く手間が減る。React + Vite と組み合わせて使う例が多い。プロトタイプの style.css はそのまま使わず、見た目を参考にして書き直す
 - Spring Data JPA: Spring Boot から PostgreSQL を読み書きする標準的な方法
 - npm: React / Vite に最初から付いてくる標準のパッケージ管理ツール
-- Maven: Spring Boot の解説や教材で最もよく使われるビルドツール
+- Gradle: Spring Boot の公式ひな形作成サイト（Spring Initializr）で標準的に選べるビルドツール。設定ファイルが短く読みやすい。「Gradle Wrapper」が付いてくるため、Gradle 本体を別途インストールしなくてよい
 
 #### 対象外
 今回は作らない機能です。
