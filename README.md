@@ -181,14 +181,15 @@
 - 要件定義（機能一覧・画面イメージ・ユースケース・非機能要件）まで確定。あわせて目次と[ER図](docs/er-diagram.md)（別ページ）を追加。
 - モック/プロトタイプ（index.html / style.css / app.js）を作成済み。リスト・カードのCRUD、ドラッグ&ドロップ、localStorage保存まで一通り動作する状態（画面の見本として利用。本実装ではPostgreSQL保存に切り替える）。
 - 技術スタックを学習動画の指示に合わせて確定（React + Java/Spring Boot + PostgreSQL）。データ保存先をlocalStorageからPostgreSQLに変更し、関連する要件とER図を更新。
-- バックエンドの開発環境を準備。Java 21（Eclipse Temurin）をインストールし、Spring Boot 4.1.1 のひな形を `backend/` に作成。起動して `http://localhost:8080/api/hello` で動作確認済み（PostgreSQL 接続はまだ）。
+- バックエンドの開発環境を準備。Java 25（Eclipse Temurin、最新のLTS版）をインストールし、Spring Boot 4.1.1 のひな形を `backend/` に作成。起動して `http://localhost:8080/api/hello` で動作確認済み（PostgreSQL 接続はまだ）。
 - 次のステップ: PostgreSQL のインストールと、バックエンドからの接続。
 
 ### 次回の再開メモ（2026-10-02時点）
 - **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）。
 - **今回（2026-10-02）やったこと**:
-  - Java 21（Eclipse Temurin）を winget でインストール（場所: `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot`）。
-  - Spring Initializr で Spring Boot 4.1.1 のひな形を作成（Gradle / Java 21 / 依存は Web のみ）。パッケージ名は `com.example.taskboard`。
+  - Java 25（Eclipse Temurin、最新のLTS＝長期サポート版）を winget でインストール（場所: `C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot`）。最初に入れた Java 21 は1つ前のLTSだったため 25 に変更。
+  - Spring Initializr で Spring Boot 4.1.1 のひな形を作成（Gradle / Java 25 / 依存は Web のみ）。パッケージ名は `com.example.taskboard`。
+  - バージョンの方針: 正式公開された安定版の最新を使う。β版・M版・SNAPSHOT（開発中の試作版）は使わない。Java はLTSの最新、Spring Boot は最新の正式版（Spring Boot にはLTSの区分がない）。
   - 動作確認用に `HelloController`（`GET /api/hello` で「Hello, Spring Boot!」を返す）を追加。後で削除してよい。
 - **起動方法**: `backend` フォルダで `.\gradlew.bat bootRun` を実行し、ブラウザで `http://localhost:8080/api/hello` を開く。止めるときは Ctrl + C。Gradle 本体のインストールは不要（Gradle Wrapper を使用）。
   - `java` が見つからないというエラーが出たら、ターミナルを開き直す（インストール直後は設定が反映されていないことがある）。
