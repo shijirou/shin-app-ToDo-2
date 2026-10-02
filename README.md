@@ -181,15 +181,22 @@
 - 要件定義（機能一覧・画面イメージ・ユースケース・非機能要件）まで確定。あわせて目次と[ER図](docs/er-diagram.md)（別ページ）を追加。
 - モック/プロトタイプ（index.html / style.css / app.js）を作成済み。リスト・カードのCRUD、ドラッグ&ドロップ、localStorage保存まで一通り動作する状態（画面の見本として利用。本実装ではPostgreSQL保存に切り替える）。
 - 技術スタックを学習動画の指示に合わせて確定（React + Java/Spring Boot + PostgreSQL）。データ保存先をlocalStorageからPostgreSQLに変更し、関連する要件とER図を更新。
-- 次のステップ: 本実装の計画（開発環境の準備 → バックエンド → フロントエンドの順など）を立てる。
+- バックエンドの開発環境を準備。Java 21（Eclipse Temurin）をインストールし、Spring Boot 4.1.1 のひな形を `backend/` に作成。起動して `http://localhost:8080/api/hello` で動作確認済み（PostgreSQL 接続はまだ）。
+- 次のステップ: PostgreSQL のインストールと、バックエンドからの接続。
 
-### 次回の再開メモ（2026-09-26時点）
-- **完了済み**: 要件定義書（README）、目次（見出しリンクに修正済み）、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計に更新）、技術スタック（学習動画の指示に合わせて確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）。
-- **今回決まったこと・分かったこと**:
+### 次回の再開メモ（2026-10-02時点）
+- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）。
+- **今回（2026-10-02）やったこと**:
+  - Java 21（Eclipse Temurin）を winget でインストール（場所: `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot`）。
+  - Spring Initializr で Spring Boot 4.1.1 のひな形を作成（Gradle / Java 21 / 依存は Web のみ）。パッケージ名は `com.example.taskboard`。
+  - 動作確認用に `HelloController`（`GET /api/hello` で「Hello, Spring Boot!」を返す）を追加。後で削除してよい。
+- **起動方法**: `backend` フォルダで `.\gradlew.bat bootRun` を実行し、ブラウザで `http://localhost:8080/api/hello` を開く。止めるときは Ctrl + C。Gradle 本体のインストールは不要（Gradle Wrapper を使用）。
+  - `java` が見つからないというエラーが出たら、ターミナルを開き直す（インストール直後は設定が反映されていないことがある）。
+- **前回（2026-09-26）までに決まったこと・分かったこと**:
   - 最初の要件で抜けていたのは「技術スタック」と「データの保存先（PostgreSQL）」の指示。ログイン機能ではなかった。
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: 本実装の進め方の計画づくり（開発環境の準備〔Java / Node.js / PostgreSQL のインストール〕、フォルダ構成、作る順番）。
+- **次回の最初にやること**: PostgreSQL のインストールと、バックエンドからの接続（Spring Data JPA と PostgreSQL ドライバを追加）。バックエンドはユーザーの指示に沿って進める。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。
