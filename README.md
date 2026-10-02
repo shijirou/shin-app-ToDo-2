@@ -187,7 +187,8 @@
 ### 次回の再開メモ（2026-10-02時点）
 - **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）。
 - **今回（2026-10-02）やったこと**:
-  - Java 25（Eclipse Temurin、最新のLTS＝長期サポート版）を winget でインストール（場所: `C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot`）。最初に入れた Java 21 は1つ前のLTSだったため 25 に変更。
+  - Java 25（Eclipse Temurin、最新のLTS＝長期サポート版）を winget でインストール（場所: `C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot`）。最初に入れた Java 21 は1つ前のLTSだったため 25 に変更し、Java 21 はアンインストール済み（PCに入っている Java は 25 のみ）。
+  - Java のアンインストールなど管理者権限が必要な操作は、Windows の許可画面（「このアプリがデバイスに変更を加えることを許可しますか？」）で「はい」を押す必要がある。
   - Spring Initializr で Spring Boot 4.1.1 のひな形を作成（Gradle / Java 25 / 依存は Web のみ）。パッケージ名は `com.example.taskboard`。
   - バージョンの方針: 正式公開された安定版の最新を使う。β版・M版・SNAPSHOT（開発中の試作版）は使わない。Java はLTSの最新、Spring Boot は最新の正式版（Spring Boot にはLTSの区分がない）。
   - 動作確認用に `HelloController`（`GET /api/hello` で「Hello, Spring Boot!」を返す）を追加。後で削除してよい。
@@ -198,6 +199,7 @@
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: PostgreSQL のインストールと、バックエンドからの接続（Spring Data JPA と PostgreSQL ドライバを追加）。バックエンドはユーザーの指示に沿って進める。
+- **次回の最初にやること**: バックエンドの続きをユーザーの指示に沿って進める（候補: PostgreSQL のインストールと、バックエンドからの接続〔Spring Data JPA と PostgreSQL ドライバを追加〕）。
+- **フロントエンドの環境**: まだ準備していない（Node.js はPCに入っているが、バージョンは未確認）。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。
