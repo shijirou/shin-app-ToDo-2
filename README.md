@@ -182,11 +182,20 @@
 - モック/プロトタイプ（index.html / style.css / app.js）を作成済み。リスト・カードのCRUD、ドラッグ&ドロップ、localStorage保存まで一通り動作する状態（画面の見本として利用。本実装ではPostgreSQL保存に切り替える）。
 - 技術スタックを学習動画の指示に合わせて確定（React + Java/Spring Boot + PostgreSQL）。データ保存先をlocalStorageからPostgreSQLに変更し、関連する要件とER図を更新。
 - バックエンドの開発環境を準備。Java 25（Eclipse Temurin、最新のLTS版）をインストールし、Spring Boot 4.1.1 のひな形を `backend/` に作成。起動して `http://localhost:8080/api/hello` で動作確認済み（PostgreSQL 接続はまだ）。
-- 次のステップ: PostgreSQL のインストールと、バックエンドからの接続。
+- PostgreSQL を Docker で動かす環境を準備。Docker Desktop をインストールし、`compose.yaml` で PostgreSQL 18 を起動して動作確認済み（バックエンドからの接続はまだ）。
+- 次のステップ: バックエンドから PostgreSQL への接続。
 
-### 次回の再開メモ（2026-10-03時点）
-- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）。
-- **今回（2026-10-03）やったこと**:
+### 次回の再開メモ（2026-10-05時点）
+- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）。
+- **今回（2026-10-05）やったこと**:
+  - PostgreSQL はパソコンに直接インストールせず、Docker（アプリを「コンテナ」という小さな箱の中で動かす道具）で動かす方針にした。
+  - Docker Desktop（Docker 29.8.1）をインストール。`docker run --rm hello-world` で動作確認済み。
+  - リポジトリ直下の `compose.yaml` で PostgreSQL 18 を起動。コンテナ名は `taskboard-db`、データベース名は `taskboard`、ユーザー名とパスワードはどちらも `postgres`、ポートは 5432。`select version();` で「PostgreSQL 18.6」と返事があることを確認。
+  - データは Docker の保存領域（ボリューム `taskboard-db-data`）に残るため、コンテナを止めても消えない。
+- **PostgreSQL の起動方法**:
+  1. 先に **Docker Desktop を起動**しておく。画面の左下が「Engine running」（緑）になれば準備完了。起動していないと `failed to connect to the docker API` というエラーになる。
+  2. リポジトリ直下（`E:\shin-app-ToDo-2`）で `docker compose up -d` を実行（起動）。止めるときは `docker compose down`。動いているかは `docker ps` で確認する。
+- **前回（2026-10-03）やったこと**:
   - バックエンドを起動して動作確認。`http://localhost:8080/api/hello` で「Hello, Spring Boot!」と表示されることを確認。
   - 学習動画では 404 が表示されれば OK とされている。違いの理由: 動画には `HelloController` がないため、何も決めていない URL を開くと 404（ページが見つかりません）になる。こちらは確認用に `HelloController` を追加済みのため文字が表示される。`http://localhost:8080/` を開けば動画と同じ 404 になることも確認済み。
   - 404 は「そのURLのページがない」という意味で、データベース未接続とは関係ない。404 が返る＝サーバーは起動して返事をしている、ということ。
@@ -204,7 +213,7 @@
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: バックエンドとDBの作業。PostgreSQL のインストールと、バックエンドからの接続〔Spring Data JPA と PostgreSQL ドライバを追加〕。ユーザーの指示に沿って進める。
+- **次回の最初にやること**: バックエンドから PostgreSQL への接続。`backend/build.gradle` に Spring Data JPA と PostgreSQL ドライバを追加し、`application.properties` に接続情報（`localhost:5432/taskboard`、ユーザー名とパスワードは `postgres`）を設定する。ユーザーの指示に沿って進める。
 - **フロントエンドの環境**: まだ準備していない（Node.js はPCに入っているが、バージョンは未確認）。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。

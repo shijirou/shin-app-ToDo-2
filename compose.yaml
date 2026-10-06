@@ -1,0 +1,17 @@
+# PostgreSQL（データベース）を Docker コンテナで動かすための設定
+# 起動: docker compose up -d   停止: docker compose down
+services:
+  db:
+    image: postgres:18
+    container_name: taskboard-db
+    environment:
+      POSTGRES_DB: taskboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - taskboard-db-data:/var/lib/postgresql
+
+volumes:
+  taskboard-db-data:
