@@ -183,11 +183,18 @@
 - 技術スタックを学習動画の指示に合わせて確定（React + Java/Spring Boot + PostgreSQL）。データ保存先をlocalStorageからPostgreSQLに変更し、関連する要件とER図を更新。
 - バックエンドの開発環境を準備。Java 25（Eclipse Temurin、最新のLTS版）をインストールし、Spring Boot 4.1.1 のひな形を `backend/` に作成。起動して `http://localhost:8080/api/hello` で動作確認済み（PostgreSQL 接続はまだ）。
 - PostgreSQL を Docker で動かす環境を準備。Docker Desktop をインストールし、`compose.yaml` で PostgreSQL 18 を起動して動作確認済み（バックエンドからの接続はまだ）。
-- 次のステップ: バックエンドから PostgreSQL への接続。
+- バックエンドから PostgreSQL への接続を設定。Spring Data JPA と PostgreSQL ドライバを追加し、`application.properties` に接続情報を書いた。起動時に DB へ接続できることを確認済み。
+- 次のステップ: リスト・カードのエンティティ（テーブルに対応する Java のクラス）の作成。
 
-### 次回の再開メモ（2026-10-05時点）
-- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）。
-- **今回（2026-10-05）やったこと**:
+### 次回の再開メモ（2026-10-07時点）
+- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）、バックエンドから PostgreSQL への接続設定。
+- **今回（2026-10-07）やったこと**:
+  - Docker Desktop を起動して確認。PostgreSQL 18 のコンテナ `taskboard-db` とデータ置き場（ボリューム）は残っていた。コンテナは PC の再起動などで止まっていたため、`docker compose up -d` で起動し直した（データは消えない）。
+  - `backend/build.gradle` に Spring Data JPA（Java からデータベースを読み書きする部品）と PostgreSQL ドライバ（Java が PostgreSQL とやり取りするための部品）を追加。
+  - `backend/src/main/resources/application.properties` に接続情報（`jdbc:postgresql://localhost:5432/taskboard`、ユーザー名とパスワードは `postgres`）を追加。`ddl-auto=update`（エンティティに合わせてテーブルを自動で作る設定）と `show-sql=true`（実行した SQL をログに出す設定）も入れた。
+  - 起動ログに `HikariPool-1 - Start completed`（DB との接続が成功した印）が出て、`/api/hello` もこれまでどおり表示されることを確認。`.\gradlew.bat test` も成功。
+  - 注意: **今後のバックエンドは、PostgreSQL を先に起動しておかないと起動に失敗する**（`Connection refused` などのエラー）。起動の順番は「Docker Desktop → `docker compose up -d` → `.\gradlew.bat bootRun`」。
+- **前回（2026-10-05）やったこと**:
   - PostgreSQL はパソコンに直接インストールせず、Docker（アプリを「コンテナ」という小さな箱の中で動かす道具）で動かす方針にした。
   - Docker Desktop（Docker 29.8.1）をインストール。`docker run --rm hello-world` で動作確認済み。
   - リポジトリ直下の `compose.yaml` で PostgreSQL 18 を起動。コンテナ名は `taskboard-db`、データベース名は `taskboard`、ユーザー名とパスワードはどちらも `postgres`、ポートは 5432。`select version();` で「PostgreSQL 18.6」と返事があることを確認。
@@ -213,7 +220,7 @@
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: バックエンドから PostgreSQL への接続。`backend/build.gradle` に Spring Data JPA と PostgreSQL ドライバを追加し、`application.properties` に接続情報（`localhost:5432/taskboard`、ユーザー名とパスワードは `postgres`）を設定する。ユーザーの指示に沿って進める。
+- **次回の最初にやること**: リスト・カードのエンティティ（[ER図](docs/er-diagram.md)のテーブルに対応する Java のクラス）を作り、PostgreSQL にテーブルができることを確認する。ユーザーの指示に沿って進める。
 - **フロントエンドの環境**: まだ準備していない（Node.js はPCに入っているが、バージョンは未確認）。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。
