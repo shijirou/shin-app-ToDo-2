@@ -10,6 +10,7 @@
 - [画面イメージ](#画面イメージ)
 - [ユースケース](#ユースケース)
 - [非機能要件](#非機能要件)
+- [開発の進め方（GitHub）](#開発の進め方github)
 - [進捗状況](#進捗状況)
 - [ER図](docs/er-diagram.md)（別ページ）
 
@@ -177,6 +178,16 @@
 - **データ永続化**: データはサーバー上のPostgreSQLに保存する。ブラウザを閉じたり、ブラウザのデータ（キャッシュ・サイトデータ）を消去したりしても保存内容は残る
 - **動作環境の前提**: 利用時はバックエンド（Spring Boot）とデータベース（PostgreSQL）を起動しておく必要がある。当面は自分のPC上（ローカル環境）で動かすことを想定し、インターネット上への公開は対象外とする
 
+### 開発の進め方（GitHub）
+変更はすべて「Issue → ブランチ → PR（プルリクエスト）→ マージ」の流れで行う。詳しいルールは [CLAUDE.md](CLAUDE.md) に書いてある。
+
+1. Issue（やることのメモ）を GitHub に登録する
+2. Issue 番号の入ったブランチ（例: `feature/2-entities`）を作って作業する
+3. PR を作る（本文に `Closes #番号` を書くと、マージ時に Issue が自動で閉じる）
+4. ユーザーが GitHub の画面で内容を確認してマージする
+
+main への直接プッシュは、Claude Code の設定（`.claude/`）と GitHub のルールセットの両方で禁止している。
+
 ### 進捗状況
 - 要件定義（機能一覧・画面イメージ・ユースケース・非機能要件）まで確定。あわせて目次と[ER図](docs/er-diagram.md)（別ページ）を追加。
 - モック/プロトタイプ（index.html / style.css / app.js）を作成済み。リスト・カードのCRUD、ドラッグ&ドロップ、localStorage保存まで一通り動作する状態（画面の見本として利用。本実装ではPostgreSQL保存に切り替える）。
@@ -184,11 +195,17 @@
 - バックエンドの開発環境を準備。Java 25（Eclipse Temurin、最新のLTS版）をインストールし、Spring Boot 4.1.1 のひな形を `backend/` に作成。起動して `http://localhost:8080/api/hello` で動作確認済み（PostgreSQL 接続はまだ）。
 - PostgreSQL を Docker で動かす環境を準備。Docker Desktop をインストールし、`compose.yaml` で PostgreSQL 18 を起動して動作確認済み（バックエンドからの接続はまだ）。
 - バックエンドから PostgreSQL への接続を設定。Spring Data JPA と PostgreSQL ドライバを追加し、`application.properties` に接続情報を書いた。起動時に DB へ接続できることを確認済み。
+- GitHub の運用ルール（Issue → ブランチ → PR）を導入。`CLAUDE.md`、Claude Code の設定（`.claude/`）、GitHub のルールセットで main への直接プッシュを禁止（Issue #1）。
 - 次のステップ: リスト・カードのエンティティ（テーブルに対応する Java のクラス）の作成。
 
-### 次回の再開メモ（2026-10-07時点）
+### 次回の再開メモ（2026-10-08時点）
+- **今回（2026-10-08）やったこと**:
+  - GitHub の運用ルールを決めた。今後はどんな変更も「Issue 登録 → ブランチ作成 → PR → ユーザーがマージ」の流れで行う（[CLAUDE.md](CLAUDE.md)）。
+  - Claude Code が main で commit / push しようとすると、`.claude/hooks/block-main.ps1`（フック＝コマンドの実行前に自動で走るチェック）が止める。`.claude/settings.json` でも main への push と強制プッシュを禁止した。
+  - GitHub 側でも、ルールセットで main を保護（PR 必須・強制プッシュ禁止・削除禁止）。
+  - このルール自体も Issue #1 → ブランチ `docs/1-github-workflow` → PR の流れで追加した。
 - **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）、バックエンドから PostgreSQL への接続設定。
-- **今回（2026-10-07）やったこと**:
+- **前回（2026-10-07）やったこと**:
   - Docker Desktop を起動して確認。PostgreSQL 18 のコンテナ `taskboard-db` とデータ置き場（ボリューム）は残っていた。コンテナは PC の再起動などで止まっていたため、`docker compose up -d` で起動し直した（データは消えない）。
   - `backend/build.gradle` に Spring Data JPA（Java からデータベースを読み書きする部品）と PostgreSQL ドライバ（Java が PostgreSQL とやり取りするための部品）を追加。
   - `backend/src/main/resources/application.properties` に接続情報（`jdbc:postgresql://localhost:5432/taskboard`、ユーザー名とパスワードは `postgres`）を追加。`ddl-auto=update`（エンティティに合わせてテーブルを自動で作る設定）と `show-sql=true`（実行した SQL をログに出す設定）も入れた。
@@ -220,7 +237,7 @@
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: リスト・カードのエンティティ（[ER図](docs/er-diagram.md)のテーブルに対応する Java のクラス）を作り、PostgreSQL にテーブルができることを確認する。ユーザーの指示に沿って進める。
+- **次回の最初にやること**: Issue を作ってブランチを切り、リスト・カードのエンティティ（[ER図](docs/er-diagram.md)のテーブルに対応する Java のクラス）を作り、PostgreSQL にテーブルができることを確認する。ユーザーの指示に沿って進める。
 - **フロントエンドの環境**: まだ準備していない（Node.js はPCに入っているが、バージョンは未確認）。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。
