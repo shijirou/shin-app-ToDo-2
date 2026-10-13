@@ -48,6 +48,16 @@ public class TaskList {
 	protected TaskList() {
 	}
 
+	public TaskList(String name, Integer position) {
+		this.name = name;
+		this.position = position;
+	}
+
+	// リストの名前を変える
+	public void rename(String name) {
+		this.name = name;
+	}
+
 	public Long getId() {
 		return id;
 	}
