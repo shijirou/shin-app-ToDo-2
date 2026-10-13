@@ -190,8 +190,8 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 
 - **Issue と PR の単位**: 1つの工程につき Issue 1つ、PR 1つにする。作業ブランチへのコミットやプッシュは何回してもよく、許可はいらない。ユーザーの許可（マージ）は、工程が終わったときに1回だけ行う。
 - **バックエンドの Issue の分け方（予定）**:
-  1. エンティティの作成（PostgreSQL にリストとカードのテーブルができる）
-  2. リストの API（追加・名前変更・削除・一覧）
+  1. ~~読み取り API（エンティティ作成・テストデータ投入・`GET /api/lists`）~~ 完了（Issue #5）
+  2. リストの API（追加・名前変更・削除）
   3. カードの API（追加・編集・削除）
   4. カードの並び替え・移動の API
   5. 動作確認用の `HelloController` を削除
@@ -205,10 +205,20 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - PostgreSQL を Docker で動かす環境を準備。Docker Desktop をインストールし、`compose.yaml` で PostgreSQL 18 を起動して動作確認済み（バックエンドからの接続はまだ）。
 - バックエンドから PostgreSQL への接続を設定。Spring Data JPA と PostgreSQL ドライバを追加し、`application.properties` に接続情報を書いた。起動時に DB へ接続できることを確認済み。
 - GitHub の運用ルール（Issue → ブランチ → PR）を導入。`CLAUDE.md`、Claude Code の設定（`.claude/`）、GitHub のルールセットで main への直接プッシュを禁止（Issue #1）。
-- 次のステップ: リスト・カードのエンティティ（テーブルに対応する Java のクラス）の作成。
+- 読み取り API を作成（Issue #5）。リスト・カードのエンティティを作り、PostgreSQL に `lists` / `cards` テーブルができた。テストデータ（`data.sql`）を起動時に入れ、`GET /api/lists` でボード全体（リストとその中のカード）が JSON で返ることを確認済み。
+- 次のステップ: リストの API（追加・名前変更・削除）。
 
-### 次回の再開メモ（2026-10-08時点）
-- **今回（2026-10-08）やったこと**:
+### 次回の再開メモ（2026-10-13時点）
+- **今回（2026-10-13）やったこと**（Issue #5 → ブランチ `feature/5-read-api` → PR）:
+  - エンティティ（データベースの表を Java で表したクラス）を作成。`entity/TaskList.java`（lists テーブル）と `entity/Card.java`（cards テーブル）。リストのクラス名は、Java の `List`（一覧を入れる箱）と名前がぶつかるため `TaskList` にした。
+  - 起動時に、Hibernate（JPA の中身）が ER図どおりにテーブルを自動で作った。リストを消すとカードも消える設定（`on delete cascade`）も付いた。
+  - テストデータ `backend/src/main/resources/data.sql`（リスト3件・カード5件）を、起動時に自動で入れるようにした。
+  - 読み取り API `GET /api/lists` を作成。流れは「Controller（入り口）→ Service（処理）→ Repository（DB の窓口）」。返すデータの形は `dto/`（ListResponse / CardResponse）にまとめた。
+  - 動作確認: `curl.exe http://localhost:8080/api/lists` で、DB と同じデータが JSON で返ることを確認。`.\gradlew.bat test` も成功。
+  - **注意**: 今は**起動するたびにデータが data.sql の内容に戻る**（最初に `TRUNCATE` で中身を空にしているため）。追加・編集の API を作るときに、この設定（`spring.sql.init.mode=always`）を見直す。
+- **API の確認方法**: Docker Desktop → `docker compose up -d` → `backend` で `.\gradlew.bat bootRun` → 別のターミナルで `curl.exe http://localhost:8080/api/lists`（ブラウザで開いても見られる）。
+- **次回の最初にやること**: 学習動画の次の機能を Claude に指示する（予定ではリストの追加・名前変更・削除の API）。
+- **前回（2026-10-08）やったこと**:
   - GitHub の運用ルールを決めた。今後はどんな変更も「Issue 登録 → ブランチ作成 → PR → ユーザーがマージ」の流れで行う（[CLAUDE.md](CLAUDE.md)）。
   - Claude Code が main で commit / push しようとすると、`.claude/hooks/block-main.ps1`（フック＝コマンドの実行前に自動で走るチェック）が止める。`.claude/settings.json` でも main への push と強制プッシュを禁止した。
   - GitHub 側でも、ルールセット `protect-main` で main を保護（PR 必須・強制プッシュ禁止・削除禁止）。
@@ -249,7 +259,6 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: Claude に「エンティティの作成を GitHub 上で行ってください」と指示する。Claude が Issue「エンティティの作成」を作り、ブランチ `feature/<番号>-entities` を作ってから作業する。作業の中身は、リスト・カードのエンティティ（[ER図](docs/er-diagram.md)のテーブルに対応する Java のクラス）を作り、PostgreSQL にテーブルができることを確認する。ユーザーの指示に沿って進める。
 - **フロントエンドの環境**: まだ準備していない（Node.js はPCに入っているが、バージョンは未確認）。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。
