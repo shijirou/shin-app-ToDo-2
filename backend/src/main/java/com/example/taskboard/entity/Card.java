@@ -49,6 +49,17 @@ public class Card {
 	protected Card() {
 	}
 
+	public Card(TaskList list, String content, Integer position) {
+		this.list = list;
+		this.content = content;
+		this.position = position;
+	}
+
+	// カードの内容を変える
+	public void updateContent(String content) {
+		this.content = content;
+	}
+
 	public Long getId() {
 		return id;
 	}

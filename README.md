@@ -191,10 +191,9 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - **Issue と PR の単位**: 1つの工程につき Issue 1つ、PR 1つにする。作業ブランチへのコミットやプッシュは何回してもよく、許可はいらない。ユーザーの許可（マージ）は、工程が終わったときに1回だけ行う。
 - **バックエンドの Issue の分け方（予定）**:
   1. ~~読み取り API（エンティティ作成・テストデータ投入・`GET /api/lists`）~~ 完了（Issue #5）
-  2. リストの API（追加・名前変更・削除）
-  3. カードの API（追加・編集・削除）
-  4. カードの並び替え・移動の API
-  5. 動作確認用の `HelloController` を削除
+  2. ~~リスト・カードの追加・変更・削除の API（Controller 層・Service 層）~~ 完了（Issue #7）
+  3. カードの並び替え・移動の API（`PATCH /api/cards/{id}/move`）
+  4. 動作確認用の `HelloController` を削除し、画面（React）から API を呼べるようにする設定（CORS）を追加
 - **Claude Code の確認画面**: 作業中に出る「このコマンドを実行してよいですか？」は Claude Code 自体の安全確認で、PR とは関係ない。
 
 ### 進捗状況
@@ -206,18 +205,35 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - バックエンドから PostgreSQL への接続を設定。Spring Data JPA と PostgreSQL ドライバを追加し、`application.properties` に接続情報を書いた。起動時に DB へ接続できることを確認済み。
 - GitHub の運用ルール（Issue → ブランチ → PR）を導入。`CLAUDE.md`、Claude Code の設定（`.claude/`）、GitHub のルールセットで main への直接プッシュを禁止（Issue #1）。
 - 読み取り API を作成（Issue #5）。リスト・カードのエンティティを作り、PostgreSQL に `lists` / `cards` テーブルができた。テストデータ（`data.sql`）を起動時に入れ、`GET /api/lists` でボード全体（リストとその中のカード）が JSON で返ることを確認済み。
-- 次のステップ: リストの API（追加・名前変更・削除）。
+- リスト・カードの追加・変更・削除の API を作成（Issue #7）。Controller 層・Service 層・エラーの返し方（400 / 404）を作り、API を呼んで動作確認済み。追加・変更したデータは、起動し直しても残るようにした。
+- 次のステップ: カードの並び替え・移動の API。
 
 ### 次回の再開メモ（2026-10-13時点）
-- **今回（2026-10-13）やったこと**（Issue #5 → ブランチ `feature/5-read-api` → PR）:
+- **今回（2026-10-13・2回目）やったこと**（Issue #7 → ブランチ `feature/7-crud-api` → PR）:
+  - 学習動画の「Controller 層」「Service 層」に合わせて、追加・変更・削除の API を作った。
+
+    | 方法 | URL | やること | 送るデータの例 |
+    |---|---|---|---|
+    | POST | `/api/lists` | リストを追加（いちばん右に） | `{"name":"保留"}` |
+    | PATCH | `/api/lists/{id}` | リストの名前を変える | `{"name":"あとでやる"}` |
+    | DELETE | `/api/lists/{id}` | リストを削除（中のカードも消える） | なし |
+    | POST | `/api/cards` | カードを追加（リストのいちばん下に） | `{"listId":1,"content":"内容"}` |
+    | PATCH | `/api/cards/{id}` | カードの内容を変える | `{"content":"内容"}` |
+    | DELETE | `/api/cards/{id}` | カードを削除 | なし |
+  - **Controller 層**（受付）: `ListController` に3つ追加、`CardController` を新しく作成。受け取るデータの形は `dto/`（ListRequest / CardCreateRequest / CardUpdateRequest）。
+  - **Service 層**（処理）: `BoardService` を `ListService` に名前を変え、`CardService` を新しく作成。「いちばん右・いちばん下に入れる」「番号が見つからなければエラー」などの決まりはここに書いた。
+  - **エラーの返し方**: `exception/GlobalExceptionHandler` にまとめた。名前や内容が空 → 400（入力ミス）、番号が見つからない → 404。入力チェックのために validation の部品を `build.gradle` に追加した。
+  - **テストデータ**: `data.sql` を「lists テーブルが空のときだけ入れる」に変えた。API で追加・変更・削除したデータは、起動し直しても残る。テストデータに戻したいときは、DB の中身を空にしてから起動する。
+  - 動作確認: すべての API を実際に呼び、期待どおりの結果と状態コード（201 / 200 / 204 / 400 / 404）が返ることを確認。リストを削除すると中のカードも消えること、起動し直してもデータが残ることも確認。`.\gradlew.bat test` も成功。
+  - 日本語を含むデータを `curl.exe` で送るときは、JSON をファイルに書いて `--data-binary @ファイル名` で送ると文字化けしない。
+- **前回（2026-10-13・1回目）やったこと**（Issue #5 → ブランチ `feature/5-read-api` → PR #6）:
   - エンティティ（データベースの表を Java で表したクラス）を作成。`entity/TaskList.java`（lists テーブル）と `entity/Card.java`（cards テーブル）。リストのクラス名は、Java の `List`（一覧を入れる箱）と名前がぶつかるため `TaskList` にした。
   - 起動時に、Hibernate（JPA の中身）が ER図どおりにテーブルを自動で作った。リストを消すとカードも消える設定（`on delete cascade`）も付いた。
   - テストデータ `backend/src/main/resources/data.sql`（リスト3件・カード5件）を、起動時に自動で入れるようにした。
   - 読み取り API `GET /api/lists` を作成。流れは「Controller（入り口）→ Service（処理）→ Repository（DB の窓口）」。返すデータの形は `dto/`（ListResponse / CardResponse）にまとめた。
   - 動作確認: `curl.exe http://localhost:8080/api/lists` で、DB と同じデータが JSON で返ることを確認。`.\gradlew.bat test` も成功。
-  - **注意**: 今は**起動するたびにデータが data.sql の内容に戻る**（最初に `TRUNCATE` で中身を空にしているため）。追加・編集の API を作るときに、この設定（`spring.sql.init.mode=always`）を見直す。
 - **API の確認方法**: Docker Desktop → `docker compose up -d` → `backend` で `.\gradlew.bat bootRun` → 別のターミナルで `curl.exe http://localhost:8080/api/lists`（ブラウザで開いても見られる）。
-- **次回の最初にやること**: 学習動画の次の機能を Claude に指示する（予定ではリストの追加・名前変更・削除の API）。
+- **次回の最初にやること**: 学習動画の次の内容を Claude に伝える（予定ではカードの並び替え・移動の API）。
 - **前回（2026-10-08）やったこと**:
   - GitHub の運用ルールを決めた。今後はどんな変更も「Issue 登録 → ブランチ作成 → PR → ユーザーがマージ」の流れで行う（[CLAUDE.md](CLAUDE.md)）。
   - Claude Code が main で commit / push しようとすると、`.claude/hooks/block-main.ps1`（フック＝コマンドの実行前に自動で走るチェック）が止める。`.claude/settings.json` でも main への push と強制プッシュを禁止した。
