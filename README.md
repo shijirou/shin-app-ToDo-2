@@ -210,7 +210,23 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - 次のステップ: フロントエンド（React + Vite）の実装。学習動画に合わせて進める。
 
 ### 次回の再開メモ（2026-10-13時点）
-- **今回（2026-10-13・3回目）やったこと**（Issue #9 → ブランチ `feature/9-move-api` → PR）:
+- **今の状態**: バックエンドの API がひととおり完成し、PR #10 まで main にマージ済み。パソコンの main も最新（プル済み）。次回はフロントエンド（画面）の学習動画に進む。
+- **完成した API の一覧**（フロントエンドから呼ぶもの。アドレスはすべて `http://localhost:8080` から始まる）:
+
+  | 方法 | URL | やること | 送るデータの例 | 成功したとき |
+  |---|---|---|---|---|
+  | GET | `/api/lists` | ボード全体（リスト＋中のカード）を読む | なし | 200 |
+  | POST | `/api/lists` | リストを追加（いちばん右に） | `{"name":"保留"}` | 201 |
+  | PATCH | `/api/lists/{id}` | リストの名前を変える | `{"name":"あとでやる"}` | 200 |
+  | DELETE | `/api/lists/{id}` | リストを削除（中のカードも消える） | なし | 204 |
+  | POST | `/api/cards` | カードを追加（リストのいちばん下に） | `{"listId":1,"content":"内容"}` | 201 |
+  | PATCH | `/api/cards/{id}` | カードの内容を変える | `{"content":"内容"}` | 200 |
+  | DELETE | `/api/cards/{id}` | カードを削除 | なし | 204 |
+  | PATCH | `/api/cards/{id}/move` | カードの並び替え・別リストへの移動（0 が先頭） | `{"listId":2,"position":0}` | 204 |
+
+  失敗したときは `{"message":"…"}` の形で理由が返る（入力ミスは 400、番号が見つからないときは 404）。
+- **今の DB のデータ**（動作確認で動かしたため、最初のテストデータとは少し違う）: ToDo（部屋を掃除する、Spring Boot の勉強）、進行中（レポートを書く）、完了（要件定義を作る）。
+- **今回（2026-10-13・3回目）やったこと**（Issue #9 → ブランチ `feature/9-move-api` → PR #10）:
   - カードの並び替え・移動の API `PATCH /api/cards/{id}/move` を作った。送るデータは `{"listId":移動先のリストの番号,"position":何番目か}`（0 が先頭）。ドラッグ&ドロップ（機能7）で使う。
   - 処理の流れ（`CardService.moveCard`）: 移動元のリストからカードを外す → 移動先の指定した位置に差し込む → 両方のリストの並び順を 0, 1, 2… と付け直す。途中で失敗したら全部取り消す（`@Transactional`）。
   - 位置にリストの枚数より大きい数を指定したら、いちばん下に入れる。位置がマイナスなら 400、リストやカードがなければ 404。
@@ -251,7 +267,16 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   - 動作確認: main の上でコミットしようとすると、フックが「main ブランチの上で commit / push することは禁止されています」と出して止めた。GitHub の main に3つのルールがかかっていることも確認済み。
   - この再開メモの更新も Issue #3 → ブランチ `docs/3-readme-resume-memo` → PR の流れで行った。
 - **マージとは**: PR は「この変更を main に取り込んでよいですか？」という申請。マージは、ユーザーがそれを許可して取り込む操作。PR のページは `https://github.com/shijirou/shin-app-ToDo-2/pulls` から開ける。PR を開くと「Files changed」で変更内容が見られる。確認したら「Merge pull request」→「Confirm merge」を押す。画面のデザインが違って分からないときは、スクリーンショットを Claude に貼る。
-- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）、バックエンドから PostgreSQL への接続設定。
+- **マージしたあとに自動で起きること**:
+  - Issue が閉じる。PR の本文に `Closes #番号` と書いてあるため（ブランチ名の番号は人が見るための目印で、自動クローズには関係ない）。
+  - GitHub 上の作業ブランチが消える（リポジトリの設定「Automatically delete head branches」をオンにした）。パソコンの中のブランチは消えないので、片付けで Claude が消す。
+- **プルとプッシュ**:
+
+  | 操作 | 向き | いつ使うか |
+  |---|---|---|
+  | プル（`git pull`） | GitHub → パソコン | マージのあと、GitHub の最新をパソコンに取り込むとき（今いるブランチが対象なので、先に main に戻る） |
+  | プッシュ（`git push`） | パソコン → GitHub | 作業ブランチの変更を GitHub に送って、PR を作るとき |
+- **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）、バックエンドから PostgreSQL への接続設定、**バックエンドの API（読み取り・追加・変更・削除・並び替え／移動）**。
 - **前回（2026-10-07）やったこと**:
   - Docker Desktop を起動して確認。PostgreSQL 18 のコンテナ `taskboard-db` とデータ置き場（ボリューム）は残っていた。コンテナは PC の再起動などで止まっていたため、`docker compose up -d` で起動し直した（データは消えない）。
   - `backend/build.gradle` に Spring Data JPA（Java からデータベースを読み書きする部品）と PostgreSQL ドライバ（Java が PostgreSQL とやり取りするための部品）を追加。
