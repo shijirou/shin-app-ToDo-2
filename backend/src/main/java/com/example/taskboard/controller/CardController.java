@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.taskboard.dto.CardCreateRequest;
+import com.example.taskboard.dto.CardMoveRequest;
 import com.example.taskboard.dto.CardResponse;
 import com.example.taskboard.dto.CardUpdateRequest;
 import com.example.taskboard.service.CardService;
@@ -39,6 +40,13 @@ public class CardController {
 	@PatchMapping("/{id}")
 	public CardResponse updateCard(@PathVariable Long id, @Valid @RequestBody CardUpdateRequest request) {
 		return cardService.updateCard(id, request.content());
+	}
+
+	// PATCH /api/cards/{id}/move: カードを並び替える・別のリストへ移す（成功したら 204）
+	@PatchMapping("/{id}/move")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void moveCard(@PathVariable Long id, @Valid @RequestBody CardMoveRequest request) {
+		cardService.moveCard(id, request.listId(), request.position());
 	}
 
 	// DELETE /api/cards/{id}: カードを削除する（成功したら 204）

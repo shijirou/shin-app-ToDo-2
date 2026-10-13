@@ -60,6 +60,16 @@ public class Card {
 		this.content = content;
 	}
 
+	// カードを別のリストに移す
+	public void moveTo(TaskList list) {
+		this.list = list;
+	}
+
+	// リスト内の並び順を変える
+	public void changePosition(Integer position) {
+		this.position = position;
+	}
+
 	public Long getId() {
 		return id;
 	}

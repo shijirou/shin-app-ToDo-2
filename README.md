@@ -192,8 +192,8 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - **バックエンドの Issue の分け方（予定）**:
   1. ~~読み取り API（エンティティ作成・テストデータ投入・`GET /api/lists`）~~ 完了（Issue #5）
   2. ~~リスト・カードの追加・変更・削除の API（Controller 層・Service 層）~~ 完了（Issue #7）
-  3. カードの並び替え・移動の API（`PATCH /api/cards/{id}/move`）
-  4. 動作確認用の `HelloController` を削除し、画面（React）から API を呼べるようにする設定（CORS）を追加
+  3. ~~カードの並び替え・移動の API（`PATCH /api/cards/{id}/move`）と `HelloController` の削除~~ 完了（Issue #9）
+  4. 画面（React）から API を呼べるようにする設定（CORS など）: フロントエンドの学習動画のやり方に合わせて行う
 - **Claude Code の確認画面**: 作業中に出る「このコマンドを実行してよいですか？」は Claude Code 自体の安全確認で、PR とは関係ない。
 
 ### 進捗状況
@@ -206,10 +206,19 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - GitHub の運用ルール（Issue → ブランチ → PR）を導入。`CLAUDE.md`、Claude Code の設定（`.claude/`）、GitHub のルールセットで main への直接プッシュを禁止（Issue #1）。
 - 読み取り API を作成（Issue #5）。リスト・カードのエンティティを作り、PostgreSQL に `lists` / `cards` テーブルができた。テストデータ（`data.sql`）を起動時に入れ、`GET /api/lists` でボード全体（リストとその中のカード）が JSON で返ることを確認済み。
 - リスト・カードの追加・変更・削除の API を作成（Issue #7）。Controller 層・Service 層・エラーの返し方（400 / 404）を作り、API を呼んで動作確認済み。追加・変更したデータは、起動し直しても残るようにした。
-- 次のステップ: カードの並び替え・移動の API。
+- カードの並び替え・移動の API を作成し、動作確認用の `HelloController` を削除（Issue #9）。これで要件の機能1〜8に必要なバックエンドの API がそろった。
+- 次のステップ: フロントエンド（React + Vite）の実装。学習動画に合わせて進める。
 
 ### 次回の再開メモ（2026-10-13時点）
-- **今回（2026-10-13・2回目）やったこと**（Issue #7 → ブランチ `feature/7-crud-api` → PR）:
+- **今回（2026-10-13・3回目）やったこと**（Issue #9 → ブランチ `feature/9-move-api` → PR）:
+  - カードの並び替え・移動の API `PATCH /api/cards/{id}/move` を作った。送るデータは `{"listId":移動先のリストの番号,"position":何番目か}`（0 が先頭）。ドラッグ&ドロップ（機能7）で使う。
+  - 処理の流れ（`CardService.moveCard`）: 移動元のリストからカードを外す → 移動先の指定した位置に差し込む → 両方のリストの並び順を 0, 1, 2… と付け直す。途中で失敗したら全部取り消す（`@Transactional`）。
+  - 位置にリストの枚数より大きい数を指定したら、いちばん下に入れる。位置がマイナスなら 400、リストやカードがなければ 404。
+  - 動作確認: 別のリストへの移動、同じリスト内の並び替え、いちばん下への移動、エラー（400 / 404）を確認。`.\gradlew.bat test` も成功。
+  - 動作確認用の `HelloController` を削除した。`/api/hello` は 404 になる。今後の起動確認は `http://localhost:8080/api/lists` で行う。
+  - GitHub の設定で、PR をマージすると作業ブランチが自動で消えるようにした（パソコンの中のブランチは、これまでどおり片付けで消す）。古いブランチ3つも削除した。
+  - **バックエンドで残っていること**: 画面から API を呼ぶための設定（CORS）。画面（`localhost:5173`）と API（`localhost:8080`）はアドレスが違うため、何もしないとブラウザが通信を止める。バックエンドに CORS の設定を書く方法と、Vite の「プロキシ」機能を使う方法があるので、フロントエンドの動画のやり方に合わせる。
+- **前回（2026-10-13・2回目）やったこと**（Issue #7 → ブランチ `feature/7-crud-api` → PR #8）:
   - 学習動画の「Controller 層」「Service 層」に合わせて、追加・変更・削除の API を作った。
 
     | 方法 | URL | やること | 送るデータの例 |
@@ -233,7 +242,7 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   - 読み取り API `GET /api/lists` を作成。流れは「Controller（入り口）→ Service（処理）→ Repository（DB の窓口）」。返すデータの形は `dto/`（ListResponse / CardResponse）にまとめた。
   - 動作確認: `curl.exe http://localhost:8080/api/lists` で、DB と同じデータが JSON で返ることを確認。`.\gradlew.bat test` も成功。
 - **API の確認方法**: Docker Desktop → `docker compose up -d` → `backend` で `.\gradlew.bat bootRun` → 別のターミナルで `curl.exe http://localhost:8080/api/lists`（ブラウザで開いても見られる）。
-- **次回の最初にやること**: 学習動画の次の内容を Claude に伝える（予定ではカードの並び替え・移動の API）。
+- **次回の最初にやること**: フロントエンドの学習動画の内容を Claude に伝える。フロントエンドの環境（Node.js のバージョン確認、Vite で React のひな形を作る）から始まる予定。
 - **前回（2026-10-08）やったこと**:
   - GitHub の運用ルールを決めた。今後はどんな変更も「Issue 登録 → ブランチ作成 → PR → ユーザーがマージ」の流れで行う（[CLAUDE.md](CLAUDE.md)）。
   - Claude Code が main で commit / push しようとすると、`.claude/hooks/block-main.ps1`（フック＝コマンドの実行前に自動で走るチェック）が止める。`.claude/settings.json` でも main への push と強制プッシュを禁止した。
@@ -267,8 +276,8 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   - Java のアンインストールなど管理者権限が必要な操作は、Windows の許可画面（「このアプリがデバイスに変更を加えることを許可しますか？」）で「はい」を押す必要がある。
   - Spring Initializr で Spring Boot 4.1.1 のひな形を作成（Gradle / Java 25 / 依存は Web のみ）。パッケージ名は `com.example.taskboard`。
   - バージョンの方針: 正式公開された安定版の最新を使う。β版・M版・SNAPSHOT（開発中の試作版）は使わない。Java はLTSの最新、Spring Boot は最新の正式版（Spring Boot にはLTSの区分がない）。
-  - 動作確認用に `HelloController`（`GET /api/hello` で「Hello, Spring Boot!」を返す）を追加。後で削除してよい。
-- **起動方法**: `backend` フォルダで `.\gradlew.bat bootRun` を実行し、ブラウザで `http://localhost:8080/api/hello` を開く。止めるときは Ctrl + C。Gradle 本体のインストールは不要（Gradle Wrapper を使用）。
+  - 動作確認用に `HelloController`（`GET /api/hello` で「Hello, Spring Boot!」を返す）を追加。（2026-10-13 に削除済み）
+- **起動方法**: `backend` フォルダで `.\gradlew.bat bootRun` を実行し、ブラウザで `http://localhost:8080/api/lists` を開く。止めるときは Ctrl + C。Gradle 本体のインストールは不要（Gradle Wrapper を使用）。
   - `java` が見つからないというエラーが出たら、ターミナルを開き直す（インストール直後は設定が反映されていないことがある）。
 - **前回（2026-09-26）までに決まったこと・分かったこと**:
   - 最初の要件で抜けていたのは「技術スタック」と「データの保存先（PostgreSQL）」の指示。ログイン機能ではなかった。
