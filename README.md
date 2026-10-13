@@ -188,6 +188,15 @@
 
 main への直接プッシュは、Claude Code の設定（`.claude/`）と GitHub のルールセットの両方で禁止している。
 
+- **Issue と PR の単位**: 1つの工程につき Issue 1つ、PR 1つにする。作業ブランチへのコミットやプッシュは何回してもよく、許可はいらない。ユーザーの許可（マージ）は、工程が終わったときに1回だけ行う。
+- **バックエンドの Issue の分け方（予定）**:
+  1. エンティティの作成（PostgreSQL にリストとカードのテーブルができる）
+  2. リストの API（追加・名前変更・削除・一覧）
+  3. カードの API（追加・編集・削除）
+  4. カードの並び替え・移動の API
+  5. 動作確認用の `HelloController` を削除
+- **Claude Code の確認画面**: 作業中に出る「このコマンドを実行してよいですか？」は Claude Code 自体の安全確認で、PR とは関係ない。
+
 ### 進捗状況
 - 要件定義（機能一覧・画面イメージ・ユースケース・非機能要件）まで確定。あわせて目次と[ER図](docs/er-diagram.md)（別ページ）を追加。
 - モック/プロトタイプ（index.html / style.css / app.js）を作成済み。リスト・カードのCRUD、ドラッグ&ドロップ、localStorage保存まで一通り動作する状態（画面の見本として利用。本実装ではPostgreSQL保存に切り替える）。
@@ -202,8 +211,11 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - **今回（2026-10-08）やったこと**:
   - GitHub の運用ルールを決めた。今後はどんな変更も「Issue 登録 → ブランチ作成 → PR → ユーザーがマージ」の流れで行う（[CLAUDE.md](CLAUDE.md)）。
   - Claude Code が main で commit / push しようとすると、`.claude/hooks/block-main.ps1`（フック＝コマンドの実行前に自動で走るチェック）が止める。`.claude/settings.json` でも main への push と強制プッシュを禁止した。
-  - GitHub 側でも、ルールセットで main を保護（PR 必須・強制プッシュ禁止・削除禁止）。
-  - このルール自体も Issue #1 → ブランチ `docs/1-github-workflow` → PR の流れで追加した。
+  - GitHub 側でも、ルールセット `protect-main` で main を保護（PR 必須・強制プッシュ禁止・削除禁止）。
+  - このルール自体も Issue #1 → ブランチ `docs/1-github-workflow` → PR #2 の流れで追加した。ユーザーが GitHub の画面で PR #2 をマージし、Issue #1 は自動で閉じた。
+  - 動作確認: main の上でコミットしようとすると、フックが「main ブランチの上で commit / push することは禁止されています」と出して止めた。GitHub の main に3つのルールがかかっていることも確認済み。
+  - この再開メモの更新も Issue #3 → ブランチ `docs/3-readme-resume-memo` → PR の流れで行った。
+- **マージとは**: PR は「この変更を main に取り込んでよいですか？」という申請。マージは、ユーザーがそれを許可して取り込む操作。PR のページは `https://github.com/shijirou/shin-app-ToDo-2/pulls` から開ける。PR を開くと「Files changed」で変更内容が見られる。確認したら「Merge pull request」→「Confirm merge」を押す。画面のデザインが違って分からないときは、スクリーンショットを Claude に貼る。
 - **完了済み**: 要件定義書（README）、目次、[ER図](docs/er-diagram.md)（PostgreSQLのテーブル設計）、技術スタック（スタイリングは Tailwind CSS、バックエンドのビルドツールは Gradle に確定）、モック/プロトタイプ3ファイル（localStorage版。画面の見本）、バックエンドのひな形（`backend/`）、PostgreSQL の Docker 環境（`compose.yaml`）、バックエンドから PostgreSQL への接続設定。
 - **前回（2026-10-07）やったこと**:
   - Docker Desktop を起動して確認。PostgreSQL 18 のコンテナ `taskboard-db` とデータ置き場（ボリューム）は残っていた。コンテナは PC の再起動などで止まっていたため、`docker compose up -d` で起動し直した（データは消えない）。
@@ -237,7 +249,7 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   - 学習動画の指示: バックエンドは Java + Spring Boot、フロントエンドは React（Next.js は対象外）、DB は PostgreSQL、その他のツールはこれらに合わせて選定。
   - サーバー・DBは自分のPC上（ローカル環境）で動かす。インターネット公開はしないため、サーバー代はかからない（使うツールもすべて無料）。
   - 外出先からの利用や他者との共有は将来の検討事項（その場合はインターネット公開とログイン機能が必要。クラウド料金が発生する可能性あり）。
-- **次回の最初にやること**: Issue を作ってブランチを切り、リスト・カードのエンティティ（[ER図](docs/er-diagram.md)のテーブルに対応する Java のクラス）を作り、PostgreSQL にテーブルができることを確認する。ユーザーの指示に沿って進める。
+- **次回の最初にやること**: Claude に「エンティティの作成を GitHub 上で行ってください」と指示する。Claude が Issue「エンティティの作成」を作り、ブランチ `feature/<番号>-entities` を作ってから作業する。作業の中身は、リスト・カードのエンティティ（[ER図](docs/er-diagram.md)のテーブルに対応する Java のクラス）を作り、PostgreSQL にテーブルができることを確認する。ユーザーの指示に沿って進める。
 - **フロントエンドの環境**: まだ準備していない（Node.js はPCに入っているが、バージョンは未確認）。
 - **未確認**: GitHub上でのER図（Mermaid）の描画。プロトタイプにあるカードの優先順位機能を要件に入れるかどうか。
 - **進め方の方針**: 少しずつ段階的に進める。各工程の後に動作確認し、トークンは節約する。計画を立ててから本実装に進む。ユーザーはプログラミング初心者のため、専門用語はかみくだいて説明する。
