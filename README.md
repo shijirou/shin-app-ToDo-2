@@ -236,7 +236,8 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - 次のステップ: リスト操作（機能1〜3）を画面から使えるようにする。
 
 ### 次回の再開メモ（2026-10-14時点）
-- **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで（Issue #17 → ブランチ `feature/17-board-view`）。
+- **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで完了・マージ済み（Issue #17）。そのあと TypeScript を 7.0.2 に更新（Issue #19）し、README に[使用バージョン](#使用バージョン)の表を追加（Issue #21）。作業中のブランチはなし（main だけ）。
+- **次回はここから**: フロントエンドの工程 3「リスト操作（機能1〜3）」。Issue を作るところから始める。
 - **DB に直接データを入れる方法**（動作確認用）: `docker exec -i taskboard-db psql -U postgres -d taskboard` で PostgreSQL に入り、`INSERT` 文を実行する。2026-10-14 に「牛乳を買う」（ToDo）・「React の勉強」（進行中）を追加した。
 - **ボード表示（Issue #17）でやったこと**:
   - `frontend/src/types.ts`（API から受け取るデータの形）、`api.ts`（API を呼ぶ関数 `fetchBoard`）、`components/`（`Board` ボード全体・`ListColumn` リスト1列・`CardItem` カード1枚）を作成。
@@ -246,7 +247,7 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - **動画の「検索」の意味**: キーワード検索の機能ではなく、「DB に入れたデータを API で取り出す（読み取る）」こと。これは Issue #5（`GET /api/lists`）で完了済み。キーワード検索は作らない。
 - **フロントエンドの工程（予定）**: 1つの工程につき Issue 1つ・PR 1つ。
   1. ~~ひな形づくり（React + Vite + Tailwind CSS、プロキシ設定）~~ Issue #13
-  2. ボード表示: `GET /api/lists` のデータをリスト・カードとして画面に並べる
+  2. ~~ボード表示: `GET /api/lists` のデータをリスト・カードとして画面に並べる~~ Issue #17
   3. リスト操作（機能1〜3）: 追加・名前の変更・削除（確認ダイアログ付き）
   4. カード操作（機能4〜6）: 追加モーダル・編集モーダル（保存・削除）
   5. ドラッグ&ドロップ（機能7）: dnd-kit で並び替え・移動し、`PATCH /api/cards/{id}/move` で保存
