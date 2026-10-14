@@ -193,7 +193,7 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   1. ~~読み取り API（エンティティ作成・テストデータ投入・`GET /api/lists`）~~ 完了（Issue #5）
   2. ~~リスト・カードの追加・変更・削除の API（Controller 層・Service 層）~~ 完了（Issue #7）
   3. ~~カードの並び替え・移動の API（`PATCH /api/cards/{id}/move`）と `HelloController` の削除~~ 完了（Issue #9）
-  4. 画面（React）から API を呼べるようにする設定（CORS など）: フロントエンドの学習動画のやり方に合わせて行う
+  4. ~~画面（React）から API を呼べるようにする設定~~ Vite のプロキシで対応（Issue #13。バックエンドの変更は不要）
 - **Claude Code の確認画面**: 作業中に出る「このコマンドを実行してよいですか？」は Claude Code 自体の安全確認で、PR とは関係ない。
 
 ### 進捗状況
@@ -207,10 +207,27 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - 読み取り API を作成（Issue #5）。リスト・カードのエンティティを作り、PostgreSQL に `lists` / `cards` テーブルができた。テストデータ（`data.sql`）を起動時に入れ、`GET /api/lists` でボード全体（リストとその中のカード）が JSON で返ることを確認済み。
 - リスト・カードの追加・変更・削除の API を作成（Issue #7）。Controller 層・Service 層・エラーの返し方（400 / 404）を作り、API を呼んで動作確認済み。追加・変更したデータは、起動し直しても残るようにした。
 - カードの並び替え・移動の API を作成し、動作確認用の `HelloController` を削除（Issue #9）。これで要件の機能1〜8に必要なバックエンドの API がそろった。
-- 次のステップ: フロントエンド（React + Vite）の実装。学習動画に合わせて進める。
+- フロントエンドのひな形を `frontend/` に作成（Issue #13）。React 19 + Vite 8 + TypeScript、Tailwind CSS 4 を導入し、`/api` をバックエンドへ取り次ぐ設定（Vite のプロキシ）を入れた。
+- 次のステップ: ボード画面に `GET /api/lists` のデータを表示する。
 
-### 次回の再開メモ（2026-10-13時点）
-- **今の状態**: バックエンドの API がひととおり完成し、PR #10 まで main にマージ済み。パソコンの main も最新（プル済み）。次回はフロントエンド（画面）の学習動画に進む。
+### 次回の再開メモ（2026-10-14時点）
+- **今の状態**: バックエンドの API は完成済み。フロントエンドはひな形まで（Issue #13 → ブランチ `feature/13-frontend-setup`）。
+- **動画の「検索」の意味**: キーワード検索の機能ではなく、「DB に入れたデータを API で取り出す（読み取る）」こと。これは Issue #5（`GET /api/lists`）で完了済み。キーワード検索は作らない。
+- **フロントエンドの工程（予定）**: 1つの工程につき Issue 1つ・PR 1つ。
+  1. ~~ひな形づくり（React + Vite + Tailwind CSS、プロキシ設定）~~ Issue #13
+  2. ボード表示: `GET /api/lists` のデータをリスト・カードとして画面に並べる
+  3. リスト操作（機能1〜3）: 追加・名前の変更・削除（確認ダイアログ付き）
+  4. カード操作（機能4〜6）: 追加モーダル・編集モーダル（保存・削除）
+  5. ドラッグ&ドロップ（機能7）: dnd-kit で並び替え・移動し、`PATCH /api/cards/{id}/move` で保存
+  6. 仕上げ: README に起動方法などをまとめる
+- **画面の起動方法**: `frontend` フォルダで `npm run dev` → ブラウザで `http://localhost:5173`。止めるときは Ctrl + C。初めて動かすパソコンでは、先に `npm install`（必要な部品のダウンロード）が必要。
+- **プロキシとは**: 画面（5173番）から `/api/...` を呼ぶと、Vite が代わりにバックエンド（8080番）へ取り次ぐしくみ。アドレスの違いでブラウザが通信を止める問題（CORS）を、バックエンドを変えずに避けられる。設定は `frontend/vite.config.ts`。
+- **今回（2026-10-14）やったこと**（Issue #13 → ブランチ `feature/13-frontend-setup`）:
+  - `npm create vite@latest` で React + TypeScript のひな形を作成し、見本のファイル（ロゴ画像・App.css など）を削除。
+  - Tailwind CSS を Vite プラグイン方式（`@tailwindcss/vite`）で導入。`src/index.css` は `@import "tailwindcss";` の1行だけ。
+  - 動作確認: `npm run dev` で画面（青い背景に「Trello風タスクボード」）が表示され、Tailwind が効くことを確認。`npm run build`・`npm run lint` も成功。
+  - PostgreSQL のコンテナ `taskboard-db` が止まっていた（`Exited (255)`）。次回の最初に `docker compose up -d` で起動し直す。
+- **前回（2026-10-13）の状態**: バックエンドの API がひととおり完成し、PR #10 まで main にマージ済み。
 - **完成した API の一覧**（フロントエンドから呼ぶもの。アドレスはすべて `http://localhost:8080` から始まる）:
 
   | 方法 | URL | やること | 送るデータの例 | 成功したとき |
