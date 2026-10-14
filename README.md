@@ -237,7 +237,9 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 
 ### 次回の再開メモ（2026-10-14時点）
 - **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで完了・マージ済み（Issue #17）。そのあと TypeScript を 7.0.2 に更新（Issue #19）し、README に[使用バージョン](#使用バージョン)の表を追加（Issue #21）。作業中のブランチはなし（main だけ）。
-- **次回はここから**: フロントエンドの工程 3「リスト操作（機能1〜3）」。Issue を作るところから始める。
+- **次回はここから**:
+  1. バックエンドなどのバージョン確認: Java・Spring Boot・Gradle・PostgreSQL・Node.js・Docker が正式公開の最新版（Java と Node.js は LTS の最新）か調べる。古ければ Issue を作って更新し、[使用バージョン](#使用バージョン)の表も直す（2026-10-14 は、最新かどうかを比べたのはフロントエンドだけ）。
+  2. フロントエンドの工程 3「リスト操作（機能1〜3）」。Issue を作るところから始める。
 - **DB に直接データを入れる方法**（動作確認用）: `docker exec -i taskboard-db psql -U postgres -d taskboard` で PostgreSQL に入り、`INSERT` 文を実行する。2026-10-14 に「牛乳を買う」（ToDo）・「React の勉強」（進行中）を追加した。
 - **ボード表示（Issue #17）でやったこと**:
   - `frontend/src/types.ts`（API から受け取るデータの形）、`api.ts`（API を呼ぶ関数 `fetchBoard`）、`components/`（`Board` ボード全体・`ListColumn` リスト1列・`CardItem` カード1枚）を作成。
