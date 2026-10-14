@@ -208,12 +208,12 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - リスト・カードの追加・変更・削除の API を作成（Issue #7）。Controller 層・Service 層・エラーの返し方（400 / 404）を作り、API を呼んで動作確認済み。追加・変更したデータは、起動し直しても残るようにした。
 - カードの並び替え・移動の API を作成し、動作確認用の `HelloController` を削除（Issue #9）。これで要件の機能1〜8に必要なバックエンドの API がそろった。
 - フロントエンドのひな形を `frontend/` に作成（Issue #13）。React 19 + Vite 8 + TypeScript、Tailwind CSS 4 を導入し、`/api` をバックエンドへ取り次ぐ設定（Vite のプロキシ）を入れた。
-- ボード画面を作成（Issue #17）。`GET /api/lists` のデータを、リスト（横に並ぶ列）とカードとして表示する。ブラウザ（`http://localhost:5173`）での見た目の確認はまだ（次回）。
-- 次のステップ: ボード画面のブラウザ確認 → PR #18 のマージ → リスト操作（機能1〜3）を画面から使えるようにする。
+- ボード画面を作成（Issue #17）。`GET /api/lists` のデータを、リスト（横に並ぶ列）とカードとして表示する。ブラウザ（`http://localhost:5173`）で DB と同じデータが並ぶことを確認。SQL で DB に直接カードを2件追加し、画面を再読み込みすると表示されることも確認（ボタンなどの操作はまだ作っていないので、クリックしても反応しないのは正常）。
+- 次のステップ: リスト操作（機能1〜3）を画面から使えるようにする。
 
 ### 次回の再開メモ（2026-10-14時点）
 - **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで（Issue #17 → ブランチ `feature/17-board-view`）。
-- **次回はここから**: PR #18 は**まだマージしない**。先にアプリを起動して、ブラウザ（`http://localhost:5173`）でボード画面に DB と同じリスト・カードが並ぶかを確認する。問題なければ PR #18 をマージ → 片付け（`git switch main` → `git pull` → `git branch -d feature/17-board-view`）。
+- **DB に直接データを入れる方法**（動作確認用）: `docker exec -i taskboard-db psql -U postgres -d taskboard` で PostgreSQL に入り、`INSERT` 文を実行する。2026-10-14 に「牛乳を買う」（ToDo）・「React の勉強」（進行中）を追加した。
 - **ボード表示（Issue #17）でやったこと**:
   - `frontend/src/types.ts`（API から受け取るデータの形）、`api.ts`（API を呼ぶ関数 `fetchBoard`）、`components/`（`Board` ボード全体・`ListColumn` リスト1列・`CardItem` カード1枚）を作成。
   - `App.tsx` で、画面を開いたときに API からボードを読み込む。読み込み中は「読み込み中…」、失敗したら赤い枠でエラーを表示する。
