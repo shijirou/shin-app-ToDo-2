@@ -222,7 +222,12 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   6. 仕上げ: README に起動方法などをまとめる
 - **画面の起動方法**: `frontend` フォルダで `npm run dev` → ブラウザで `http://localhost:5173`。止めるときは Ctrl + C。初めて動かすパソコンでは、先に `npm install`（必要な部品のダウンロード）が必要。
 - **プロキシとは**: 画面（5173番）から `/api/...` を呼ぶと、Vite が代わりにバックエンド（8080番）へ取り次ぐしくみ。アドレスの違いでブラウザが通信を止める問題（CORS）を、バックエンドを変えずに避けられる。設定は `frontend/vite.config.ts`。
-- **今回（2026-10-14）やったこと**（Issue #13 → ブランチ `feature/13-frontend-setup`）:
+- **ポートのルール（Issue #15）**: サーバーは必ず決められたポート（画面 5173・API 8080・DB 5432）で起動する（学習動画の指示）。**ポートの競合**（すでに別のプロセスが使っている）が起きたら、別のポートに逃げずに、使っているプロセスを止めてから起動し直す。詳しくは [CLAUDE.md](CLAUDE.md)。
+  - Claude Code 側の制限: フック `.claude/hooks/block-port-change.ps1` が、`--port` や `server.port` などでポートを変えて起動するコマンドを止める。
+  - 画面側の制限: `frontend/vite.config.ts` の `strictPort: true` で、5173 が使用中なら 5174 などにずれずにエラーで止まる。
+  - 動作確認: フックが、ポートを変える起動コマンド5種類を止め、ふつうの起動コマンドやビルドは止めないことを確認。`git` / `gh` のコマンドは、コミットや PR の文章に起動コマンドが書かれていても止めない（最初は PR の本文に反応して止まってしまったため直した）。5173 が使用中のときに2つ目の `npm run dev` が「Port 5173 is already in use」で止まることも確認。
+  - 注意: PowerShell 5.1 用のフック（`.ps1`）に日本語を書くときは、ファイルの先頭に BOM（UTF-8 の目印）が必要。ないと文字化けしてフックがエラーになる。
+- **今回（2026-10-14）やったこと**（Issue #13 → ブランチ `feature/13-frontend-setup` → PR #14）:
   - `npm create vite@latest` で React + TypeScript のひな形を作成し、見本のファイル（ロゴ画像・App.css など）を削除。
   - Tailwind CSS を Vite プラグイン方式（`@tailwindcss/vite`）で導入。`src/index.css` は `@import "tailwindcss";` の1行だけ。
   - 動作確認: `npm run dev` で画面（青い背景に「Trello風タスクボード」）が表示され、Tailwind が効くことを確認。`npm run build`・`npm run lint` も成功。
