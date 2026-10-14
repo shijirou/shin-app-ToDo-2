@@ -208,10 +208,16 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - リスト・カードの追加・変更・削除の API を作成（Issue #7）。Controller 層・Service 層・エラーの返し方（400 / 404）を作り、API を呼んで動作確認済み。追加・変更したデータは、起動し直しても残るようにした。
 - カードの並び替え・移動の API を作成し、動作確認用の `HelloController` を削除（Issue #9）。これで要件の機能1〜8に必要なバックエンドの API がそろった。
 - フロントエンドのひな形を `frontend/` に作成（Issue #13）。React 19 + Vite 8 + TypeScript、Tailwind CSS 4 を導入し、`/api` をバックエンドへ取り次ぐ設定（Vite のプロキシ）を入れた。
-- 次のステップ: ボード画面に `GET /api/lists` のデータを表示する。
+- ボード画面を作成（Issue #17）。`GET /api/lists` のデータを、リスト（横に並ぶ列）とカードとして表示する。ブラウザ（`http://localhost:5173`）で DB と同じデータが並ぶことを確認。
+- 次のステップ: リスト操作（機能1〜3）を画面から使えるようにする。
 
 ### 次回の再開メモ（2026-10-14時点）
-- **今の状態**: バックエンドの API は完成済み。フロントエンドはひな形まで（Issue #13 → ブランチ `feature/13-frontend-setup`）。
+- **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで（Issue #17 → ブランチ `feature/17-board-view`）。
+- **ボード表示（Issue #17）でやったこと**:
+  - `frontend/src/types.ts`（API から受け取るデータの形）、`api.ts`（API を呼ぶ関数 `fetchBoard`）、`components/`（`Board` ボード全体・`ListColumn` リスト1列・`CardItem` カード1枚）を作成。
+  - `App.tsx` で、画面を開いたときに API からボードを読み込む。読み込み中は「読み込み中…」、失敗したら赤い枠でエラーを表示する。
+  - 動作確認: ポートのルールどおり、前に起動したままだった画面サーバー（5173）を止めてから、DB（5432）→ API（8080）→ 画面（5173）の順に起動。`http://localhost:5173/api/lists` でプロキシ経由でもデータが取れること、`npm run build`・`npm run lint` の成功を確認。
+- **アプリの起動の順番**: Docker Desktop → `docker compose up -d`（DB）→ `backend` で `.\gradlew.bat bootRun`（API）→ `frontend` で `npm run dev`（画面）→ ブラウザで `http://localhost:5173`。
 - **動画の「検索」の意味**: キーワード検索の機能ではなく、「DB に入れたデータを API で取り出す（読み取る）」こと。これは Issue #5（`GET /api/lists`）で完了済み。キーワード検索は作らない。
 - **フロントエンドの工程（予定）**: 1つの工程につき Issue 1つ・PR 1つ。
   1. ~~ひな形づくり（React + Vite + Tailwind CSS、プロキシ設定）~~ Issue #13
