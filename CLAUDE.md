@@ -22,6 +22,23 @@
 
 上記は `.claude/settings.json` とフック（`.claude/hooks/block-main.ps1`）でも止まるようにしている。GitHub 側でも、ルールセットで main を保護している。
 
+## サーバーのポートのルール（必須）
+動作確認でサーバーを起動するときは、必ず次の決められたポートで動かす（学習動画の指示）。
+
+| サーバー | ポート | 起動方法 |
+|---|---|---|
+| 画面（Vite） | 5173 | `frontend` で `npm run dev` |
+| API（Spring Boot） | 8080 | `backend` で `.\gradlew.bat bootRun` |
+| DB（PostgreSQL） | 5432 | リポジトリ直下で `docker compose up -d` |
+
+- 別のポートで一時的に起動しない（`--port`、`server.port`、`PORT=` などでポートを変えない）。別のポートだと、画面と API のつながり（プロキシ）などがうまく動かないことがある。
+- **ポートの競合**（そのポートを別のプロセスがすでに使っていて起動できない状態）が起きたら、使っているプロセスを止めてから、決められたポートで起動し直す。
+  1. 使っているプロセスを調べる: `Get-NetTCPConnection -LocalPort <ポート> -State Listen | Select-Object OwningProcess` → `Get-Process -Id <番号>`
+  2. 前に起動したこのアプリのサーバー（node / java など）なら止める: `Stop-Process -Id <番号>`。DB はコンテナを `docker compose down` で止める。
+  3. このアプリと関係なさそうなプロセスなら、止める前にユーザーに確認する。
+- 画面は `vite.config.ts` の `strictPort: true` で、使用中なら別の番号にずれずにエラーで止まる。
+- ポートを変える起動コマンドは、フック（`.claude/hooks/block-port-change.ps1`）でも止まるようにしている。
+
 ## 進め方の方針
 - ユーザーはプログラミング初心者。専門用語はかみくだいて説明する。
 - 少しずつ段階的に進める。各工程のあとに動作確認し、計画を立ててから実装する。トークンは節約する。
