@@ -8,6 +8,9 @@ $data = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $command = $data.tool_input.command
 if (-not $command) { exit 0 }
 
+# git / gh（コミットや PR の文章に起動コマンドが書かれていることがある）は対象外
+if ($command -match '^\s*(git|gh)\s') { exit 0 }
+
 # サーバーを起動するコマンドでなければ何もしない
 if ($command -notmatch '(npm\s+(run\s+)?(dev|start|preview)|npx\s+vite|\bvite\b|bootRun|gradlew|java\s+.*-jar|docker\s+(compose|run))') { exit 0 }
 
