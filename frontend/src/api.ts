@@ -24,6 +24,40 @@ export async function fetchBoard(): Promise<TaskList[]> {
   return res.json()
 }
 
+// リストを追加する（POST /api/lists）。ボードのいちばん右に入る
+export async function createList(name: string): Promise<TaskList> {
+  const res = await fetch('/api/lists', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'リストの追加に失敗しました'))
+  }
+  return res.json()
+}
+
+// リストの名前を変える（PATCH /api/lists/{id}）
+export async function renameList(id: number, name: string): Promise<TaskList> {
+  const res = await fetch(`/api/lists/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'リスト名の変更に失敗しました'))
+  }
+  return res.json()
+}
+
+// リストを削除する（DELETE /api/lists/{id}）。中のカードも DB から一緒に消える。成功すると本文なし（204）
+export async function deleteList(id: number): Promise<void> {
+  const res = await fetch(`/api/lists/${id}`, { method: 'DELETE' })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'リストの削除に失敗しました'))
+  }
+}
+
 // カードを追加する（POST /api/cards）。リストのいちばん下に入る
 export async function createCard(listId: number, content: string): Promise<Card> {
   const res = await fetch('/api/cards', {
