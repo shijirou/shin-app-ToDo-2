@@ -49,3 +49,11 @@ export async function updateCard(id: number, content: string): Promise<Card> {
   }
   return res.json()
 }
+
+// カードを削除する（DELETE /api/cards/{id}）。DB の行そのものが消える。成功すると本文なし（204）
+export async function deleteCard(id: number): Promise<void> {
+  const res = await fetch(`/api/cards/${id}`, { method: 'DELETE' })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'カードの削除に失敗しました'))
+  }
+}

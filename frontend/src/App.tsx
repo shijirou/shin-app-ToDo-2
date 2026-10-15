@@ -35,8 +35,8 @@ function App() {
     loadBoard()
   }
 
-  // カードの更新に成功したら、モーダルを閉じてボードを読み直す
-  function handleCardUpdated() {
+  // カードの更新・削除に成功したら、モーダルを閉じてボードを読み直す
+  function handleCardChanged() {
     setEditingCard(null)
     loadBoard()
   }
@@ -67,7 +67,7 @@ function App() {
         <CardEditModal
           card={editingCard}
           onClose={() => setEditingCard(null)}
-          onUpdated={handleCardUpdated}
+          onChanged={handleCardChanged}
         />
       )}
     </div>
