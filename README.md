@@ -87,7 +87,7 @@
 - Gradle: Spring Boot の公式ひな形作成サイト（Spring Initializr）で標準的に選べるビルドツール。設定ファイルが短く読みやすい。「Gradle Wrapper」が付いてくるため、Gradle 本体を別途インストールしなくてよい
 
 #### 使用バージョン
-（2026-10-14 時点。方針: 正式公開された安定版の最新を使う。Java と Node.js は長期サポート版（LTS）の最新）
+（フロントエンドは 2026-10-14、それ以外は 2026-10-16 時点。方針: 正式公開された安定版の最新を使う。Java と Node.js は長期サポート版（LTS）の最新）
 
 | 分類 | ソフトウェア | バージョン | メモ |
 |---|---|---|---|
@@ -97,15 +97,17 @@
 | フロントエンド | Tailwind CSS | 4.3.3 | 最新を確認済み |
 | フロントエンド | oxlint | 1.88.0 | コードの書き方のチェック（学習動画の ESLint の代わり）。最新を確認済み |
 | フロントエンド | dnd-kit | — | まだ入れていない（ドラッグ&ドロップの工程で入れる） |
-| 開発ツール | Node.js / npm | 24.20.0 / 11.19.0 | Node.js は LTS 版。`@types/node` はこれに合わせて 24 系 |
-| バックエンド | Java（Eclipse Temurin） | 25.0.4 | LTS 版 |
-| バックエンド | Spring Boot | 4.1.1 | |
-| バックエンド | Gradle（Gradle Wrapper） | 9.7.1 | |
-| データベース | PostgreSQL | 18.6 | Docker のイメージ `postgres:18` |
-| 開発ツール | Docker | 29.8.1 | |
+| 開発ツール | Node.js / npm | 24.20.0 / 11.19.0 | Node.js は LTS 版。`@types/node` はこれに合わせて 24 系。**新しい LTS 24.22.0 あり（パソコンへのインストールで更新する）** |
+| バックエンド | Java（Eclipse Temurin） | 25.0.4.1 | LTS 版。最新を確認済み（Java 27 も出ているが LTS ではない） |
+| バックエンド | Spring Boot | 4.1.1 | 最新を確認済み（4.2.0-M2 は M 版＝試作版なので使わない） |
+| バックエンド | Spring Dependency Management（Gradle の部品） | 1.1.7 | 最新を確認済み |
+| バックエンド | Gradle（Gradle Wrapper） | 9.8.1 | 最新を確認済み（Issue #25 で 9.7.1 から更新） |
+| データベース | PostgreSQL | 18.6 | Docker のイメージ `postgres:18`。最新を確認済み（19 はまだβ版） |
+| 開発ツール | Docker Desktop（Docker Engine） | 4.93.0（29.8.1） | **新しい版 4.95.0 あり（Docker Desktop の画面から更新する）** |
 
-- 「最新を確認済み」は、2026-10-14 に `npm outdated` で最新版と比べた結果。
-- 調べ方: フロントエンドは `frontend` で `npm ls --depth=0`（入っている版）と `npm outdated`（新しい版があるか）。Java は `java -version`、Node.js は `node -v`。
+- 「最新を確認済み」は、フロントエンドは 2026-10-14 に `npm outdated` で、それ以外は 2026-10-16 に公式の配布元（Maven Central・Gradle・Adoptium・Node.js・Docker Hub・Docker のリリースノート）で最新版と比べた結果。
+- 調べ方: フロントエンドは `frontend` で `npm ls --depth=0`（入っている版）と `npm outdated`（新しい版があるか）。Java は `java -version`、Node.js は `node -v`、Gradle は `backend` で `.\gradlew.bat --version`、PostgreSQL は `docker exec taskboard-db psql -U postgres -c "SELECT version();"`、Docker は `docker version`。
+- Gradle の更新方法: `backend` で `.\gradlew.bat wrapper --gradle-version <版>`。`gradle/wrapper/gradle-wrapper.properties` の版の番号が書き換わる。
 
 #### 対象外
 今回は作らない機能です。
@@ -233,13 +235,14 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - ボード画面を作成（Issue #17）。`GET /api/lists` のデータを、リスト（横に並ぶ列）とカードとして表示する。ブラウザ（`http://localhost:5173`）で DB と同じデータが並ぶことを確認。SQL で DB に直接カードを2件追加し、画面を再読み込みすると表示されることも確認（ボタンなどの操作はまだ作っていないので、クリックしても反応しないのは正常）。
 - TypeScript を最新の安定版 7.0.2 に更新（Issue #19）。Vite のひな形は 6.0 系で作られていたため。`npm run build`・`npm run lint` の成功を確認し、ブラウザでも表示が変わらないことを確認。
 - コードの書き方のチェックには、学習動画の ESLint ではなく **oxlint**（同じ役割の道具。Vite のひな形が入れたもの）を使う。最新版で問題なく動くので入れ替えない。`npm run lint` で動く。
-- 次のステップ: リスト操作（機能1〜3）を画面から使えるようにする。
+- バックエンドなどのバージョンを確認（Issue #25）。Java・Spring Boot・PostgreSQL は最新。Gradle を 9.7.1 から 9.8.1 に更新し、`.\gradlew.bat test` の成功を確認。Node.js と Docker Desktop は新しい版が出ているが、パソコンへのインストールで更新するもの。
+- 次のステップ: 「新規登録」機能を画面から使えるようにする。
 
-### 次回の再開メモ（2026-10-14時点）
-- **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで完了・マージ済み（Issue #17）。そのあと TypeScript を 7.0.2 に更新（Issue #19）し、README に[使用バージョン](#使用バージョン)の表を追加（Issue #21）。作業中のブランチはなし（main だけ）。
+### 次回の再開メモ（2026-10-16時点）
+- **今の状態**: バックエンドの API は完成済み。フロントエンドはボード表示まで完了（Issue #17）。[使用バージョン](#使用バージョン)の表に、バックエンドなどのバージョン確認の結果を書いた（Issue #25）。
 - **次回はここから**:
-  1. バックエンドなどのバージョン確認: Java・Spring Boot・Gradle・PostgreSQL・Node.js・Docker が正式公開の最新版（Java と Node.js は LTS の最新）か調べる。古ければ Issue を作って更新し、[使用バージョン](#使用バージョン)の表も直す（2026-10-14 は、最新かどうかを比べたのはフロントエンドだけ）。
-  2. フロントエンドの工程 3「リスト操作（機能1〜3）」。Issue を作るところから始める。
+  1. 「新規登録」機能の実装。Issue を作るところから始める。
+  2. （必要なら）Node.js を 24.22.0 に、Docker Desktop を 4.95.0 に更新し、[使用バージョン](#使用バージョン)の表を直す。
 - **DB に直接データを入れる方法**（動作確認用）: `docker exec -i taskboard-db psql -U postgres -d taskboard` で PostgreSQL に入り、`INSERT` 文を実行する。2026-10-14 に「牛乳を買う」（ToDo）・「React の勉強」（進行中）を追加した。
 - **ボード表示（Issue #17）でやったこと**:
   - `frontend/src/types.ts`（API から受け取るデータの形）、`api.ts`（API を呼ぶ関数 `fetchBoard`）、`components/`（`Board` ボード全体・`ListColumn` リスト1列・`CardItem` カード1枚）を作成。
