@@ -36,3 +36,16 @@ export async function createCard(listId: number, content: string): Promise<Card>
   }
   return res.json()
 }
+
+// カードの内容を変える（PATCH /api/cards/{id}）。並び順と入っているリストは変わらない
+export async function updateCard(id: number, content: string): Promise<Card> {
+  const res = await fetch(`/api/cards/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'カードの更新に失敗しました'))
+  }
+  return res.json()
+}
