@@ -1,6 +1,9 @@
+import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { deleteList, renameList } from '../api'
+import { cardDndId, listDndId } from '../dnd'
 import type { Card, TaskList } from '../types'
 import CardItem from './CardItem'
 
@@ -18,6 +21,8 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
   const [name, setName] = useState(list.name)
   const [busy, setBusy] = useState(false) // 保存中・削除中
   const [error, setError] = useState<string | null>(null)
+  // リスト全体を「カードを落とせる場所」にする（カードが0枚のリストにも落とせるように）
+  const { setNodeRef } = useDroppable({ id: listDndId(list.id) })
 
   const trimmed = name.trim() // 前後の空白は取り除いて送る
   // 空のとき・何も変えていないときは保存できない
@@ -70,7 +75,7 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
   }
 
   return (
-    <section className="w-64 shrink-0 rounded-md bg-gray-200 p-2">
+    <section ref={setNodeRef} className="w-64 shrink-0 rounded-md bg-gray-200 p-2">
       {renaming ? (
         <form className="mb-2 flex gap-1" onSubmit={handleRename}>
           <input
@@ -138,11 +143,17 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
         </div>
       )}
       {error && <p className="mb-2 rounded bg-red-100 p-2 text-sm text-red-700">{error}</p>}
-      <ul className="flex flex-col gap-2">
-        {list.cards.map((card) => (
-          <CardItem key={card.id} card={card} onEdit={onEditCard} />
-        ))}
-      </ul>
+      {/* この中のカードは、ドラッグで上下に並び替えられる */}
+      <SortableContext
+        items={list.cards.map((card) => cardDndId(card.id))}
+        strategy={verticalListSortingStrategy}
+      >
+        <ul className="flex min-h-2 flex-col gap-2">
+          {list.cards.map((card) => (
+            <CardItem key={card.id} card={card} onEdit={onEditCard} />
+          ))}
+        </ul>
+      </SortableContext>
       <button
         type="button"
         className="mt-2 w-full rounded px-2 py-1 text-left text-sm text-slate-600 hover:bg-gray-300"
