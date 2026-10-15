@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { createCard } from '../api'
-import type { TaskList } from '../types'
+import type { Priority, TaskList } from '../types'
+import PrioritySelect from './PrioritySelect'
 
 type Props = {
   lists: TaskList[]
@@ -14,6 +15,7 @@ type Props = {
 function CardAddModal({ lists, initialListId, onClose, onAdded }: Props) {
   const [listId, setListId] = useState(initialListId)
   const [content, setContent] = useState('')
+  const [priority, setPriority] = useState<Priority>('MEDIUM') // 最初は「中」
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,7 +27,7 @@ function CardAddModal({ lists, initialListId, onClose, onAdded }: Props) {
     setSaving(true)
     setError(null)
     try {
-      await createCard(listId, content.trim()) // 前後の空白・改行は取り除いて送る
+      await createCard(listId, content.trim(), priority) // 前後の空白・改行は取り除いて送る
       onAdded()
     } catch (err) {
       setError((err as Error).message)
@@ -77,6 +79,8 @@ function CardAddModal({ lists, initialListId, onClose, onAdded }: Props) {
           onChange={(e) => setContent(e.target.value)}
           autoFocus
         />
+
+        <PrioritySelect value={priority} onChange={setPriority} />
 
         {error && <p className="mb-3 rounded bg-red-100 p-2 text-sm text-red-700">{error}</p>}
 

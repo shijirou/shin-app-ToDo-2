@@ -33,13 +33,13 @@ public class CardController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public CardResponse createCard(@Valid @RequestBody CardCreateRequest request) {
-		return cardService.createCard(request.listId(), request.content());
+		return cardService.createCard(request.listId(), request.content(), request.priority());
 	}
 
-	// PATCH /api/cards/{id}: カードの内容を変える
+	// PATCH /api/cards/{id}: カードの内容・重要度を変える
 	@PatchMapping("/{id}")
 	public CardResponse updateCard(@PathVariable Long id, @Valid @RequestBody CardUpdateRequest request) {
-		return cardService.updateCard(id, request.content());
+		return cardService.updateCard(id, request.content(), request.priority());
 	}
 
 	// PATCH /api/cards/{id}/move: カードを並び替える・別のリストへ移す（成功したら 204）

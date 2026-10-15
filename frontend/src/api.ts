@@ -1,6 +1,6 @@
 // バックエンドの API を呼ぶ関数をまとめたファイル
 // /api で始まる URL は、Vite のプロキシがバックエンド（8080 番）へ取り次ぐ
-import type { Card, TaskList } from './types'
+import type { Card, Priority, TaskList } from './types'
 
 // 失敗したときのメッセージを作る。バックエンドは {"message":"…"} の形で理由を返す
 async function errorMessage(res: Response, fallback: string): Promise<string> {
@@ -59,11 +59,11 @@ export async function deleteList(id: number): Promise<void> {
 }
 
 // カードを追加する（POST /api/cards）。リストのいちばん下に入る
-export async function createCard(listId: number, content: string): Promise<Card> {
+export async function createCard(listId: number, content: string, priority: Priority): Promise<Card> {
   const res = await fetch('/api/cards', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ listId, content }),
+    body: JSON.stringify({ listId, content, priority }),
   })
   if (!res.ok) {
     throw new Error(await errorMessage(res, 'カードの追加に失敗しました'))
@@ -71,12 +71,12 @@ export async function createCard(listId: number, content: string): Promise<Card>
   return res.json()
 }
 
-// カードの内容を変える（PATCH /api/cards/{id}）。並び順と入っているリストは変わらない
-export async function updateCard(id: number, content: string): Promise<Card> {
+// カードの内容と重要度を変える（PATCH /api/cards/{id}）。並び順と入っているリストは変わらない
+export async function updateCard(id: number, content: string, priority: Priority): Promise<Card> {
   const res = await fetch(`/api/cards/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, priority }),
   })
   if (!res.ok) {
     throw new Error(await errorMessage(res, 'カードの更新に失敗しました'))
