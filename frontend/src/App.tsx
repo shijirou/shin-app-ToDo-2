@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchBoard } from './api'
+import { fetchBoard, moveCard } from './api'
 import Board from './components/Board'
 import CardAddModal from './components/CardAddModal'
 import CardEditModal from './components/CardEditModal'
@@ -14,6 +14,8 @@ function App() {
   const [addingListId, setAddingListId] = useState<number | null>(null)
   // 編集中のカード（null なら編集モーダルは閉じている）
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  // 画面の上に出すお知らせ（カードの移動に失敗したときなど）
+  const [notice, setNotice] = useState<string | null>(null)
 
   // ボードを API から読み込む（最初の表示と、カードを追加したあとに使う）
   function loadBoard() {
@@ -35,6 +37,20 @@ function App() {
     loadBoard()
   }
 
+  // カードをドラッグ&ドロップしたら、先に画面を動かしてから保存する。
+  // 保存に失敗したら、元の位置に戻してお知らせを出す
+  function handleMoveCard(newLists: TaskList[], cardId: number, listId: number, position: number) {
+    const before = lists
+    setLists(newLists)
+    setNotice(null)
+    moveCard(cardId, listId, position)
+      .then(() => loadBoard()) // 保存できたら、念のため DB の内容で読み直す
+      .catch((e: Error) => {
+        setLists(before)
+        setNotice(`${e.message}。カードを元の位置に戻しました。`)
+      })
+  }
+
   // カードの更新・削除に成功したら、モーダルを閉じてボードを読み直す
   function handleCardChanged() {
     setEditingCard(null)
@@ -52,12 +68,21 @@ function App() {
           {error}。バックエンドと DB が起動しているか確認してください。
         </p>
       )}
+      {notice && (
+        <p className="mx-4 mt-4 flex items-start justify-between gap-2 rounded bg-red-100 p-3 text-red-700">
+          {notice}
+          <button type="button" className="px-1" onClick={() => setNotice(null)} aria-label="お知らせを閉じる">
+            ×
+          </button>
+        </p>
+      )}
       {!loading && !error && (
         <Board
           lists={lists}
           onAddCard={setAddingListId}
           onEditCard={setEditingCard}
           onListsChanged={loadBoard}
+          onMoveCard={handleMoveCard}
         />
       )}
       {addingListId !== null && (

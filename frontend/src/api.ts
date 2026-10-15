@@ -84,6 +84,19 @@ export async function updateCard(id: number, content: string): Promise<Card> {
   return res.json()
 }
 
+// カードを並び替える・別のリストへ移す（PATCH /api/cards/{id}/move）
+// position は、移動先のリストで上から何番目か（0 から数える）。成功すると本文なし（204）
+export async function moveCard(id: number, listId: number, position: number): Promise<void> {
+  const res = await fetch(`/api/cards/${id}/move`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ listId, position }),
+  })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'カードの移動に失敗しました'))
+  }
+}
+
 // カードを削除する（DELETE /api/cards/{id}）。DB の行そのものが消える。成功すると本文なし（204）
 export async function deleteCard(id: number): Promise<void> {
   const res = await fetch(`/api/cards/${id}`, { method: 'DELETE' })
