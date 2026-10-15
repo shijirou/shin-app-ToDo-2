@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.taskboard.dto.CardResponse;
 import com.example.taskboard.entity.Card;
+import com.example.taskboard.entity.Priority;
 import com.example.taskboard.entity.TaskList;
 import com.example.taskboard.exception.NotFoundException;
 import com.example.taskboard.repository.CardRepository;
@@ -25,21 +26,25 @@ public class CardService {
 		this.taskListRepository = taskListRepository;
 	}
 
-	// カードを追加する（指定したリストのいちばん下に入れる）
+	// カードを追加する（指定したリストのいちばん下に入れる）。重要度がなければ「中」
 	@Transactional
-	public CardResponse createCard(Long listId, String content) {
+	public CardResponse createCard(Long listId, String content, Priority priority) {
 		TaskList list = taskListRepository.findById(listId)
 				.orElseThrow(() -> new NotFoundException("リストが見つかりません: " + listId));
 		int position = cardRepository.findMaxPositionByListId(listId) + 1;
-		Card card = cardRepository.save(new Card(list, content, position));
+		Priority p = priority != null ? priority : Priority.MEDIUM;
+		Card card = cardRepository.save(new Card(list, content, p, position));
 		return CardResponse.from(card);
 	}
 
-	// カードの内容を変える
+	// カードの内容と重要度を変える（重要度がなければ今のまま）
 	@Transactional
-	public CardResponse updateCard(Long id, String content) {
+	public CardResponse updateCard(Long id, String content, Priority priority) {
 		Card card = findCard(id);
 		card.updateContent(content);
+		if (priority != null) {
+			card.changePriority(priority);
+		}
 		return CardResponse.from(card);
 	}
 

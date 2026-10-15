@@ -1,6 +1,7 @@
 package com.example.taskboard.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -25,5 +26,12 @@ public class GlobalExceptionHandler {
 	public ErrorResponse handleValidation(MethodArgumentNotValidException e) {
 		String message = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
 		return new ErrorResponse(message);
+	}
+
+	// 送られたデータの形が正しくないとき（決まっていない重要度など）→ 400
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse handleNotReadable(HttpMessageNotReadableException e) {
+		return new ErrorResponse("送られたデータの形が正しくありません（重要度は HIGH・MEDIUM・LOW のどれか）");
 	}
 }

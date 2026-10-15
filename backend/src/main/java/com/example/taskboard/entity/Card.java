@@ -9,6 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,6 +37,11 @@ public class Card {
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String content;
 
+	// 重要度。DB 側にも初期値 'MEDIUM' を付けておくので、この列を足す前からあるカードは「中」になる
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, columnDefinition = "VARCHAR(10) DEFAULT 'MEDIUM'")
+	private Priority priority = Priority.MEDIUM;
+
 	@Column(nullable = false)
 	private Integer position;
 
@@ -49,15 +56,21 @@ public class Card {
 	protected Card() {
 	}
 
-	public Card(TaskList list, String content, Integer position) {
+	public Card(TaskList list, String content, Priority priority, Integer position) {
 		this.list = list;
 		this.content = content;
+		this.priority = priority;
 		this.position = position;
 	}
 
 	// カードの内容を変える
 	public void updateContent(String content) {
 		this.content = content;
+	}
+
+	// 重要度を変える
+	public void changePriority(Priority priority) {
+		this.priority = priority;
 	}
 
 	// カードを別のリストに移す
@@ -80,6 +93,10 @@ public class Card {
 
 	public String getContent() {
 		return content;
+	}
+
+	public Priority getPriority() {
+		return priority;
 	}
 
 	public Integer getPosition() {

@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import type { ComponentProps } from 'react'
 import type { Card } from '../types'
 import { cardDndId } from '../dnd'
+import { priorityInfo } from '../priority'
 
 type Props = {
   card: Card
@@ -31,11 +32,14 @@ function CardItem({ card, onEdit }: Props) {
 type CardViewProps = ComponentProps<'button'> & { card: Card }
 
 // カードの見た目。ドラッグ中にマウスについてくるカード（DragOverlay）でも使う
+// 左端の色の帯で重要度を表す（高：赤、中：黄、低：青）
 export function CardView({ card, className = '', ...rest }: CardViewProps) {
+  const p = priorityInfo(card.priority)
   return (
     <button
       type="button"
-      className={`w-full cursor-grab whitespace-pre-wrap rounded bg-white px-3 py-2 text-left text-sm shadow-sm hover:bg-sky-50 ${className}`}
+      title={`重要度：${p.label}`} // マウスを乗せると重要度の名前が出る
+      className={`w-full cursor-grab whitespace-pre-wrap rounded border-l-4 bg-white px-3 py-2 text-left text-sm shadow-sm hover:bg-sky-50 ${p.borderClass} ${className}`}
       {...rest}
     >
       {card.content}
