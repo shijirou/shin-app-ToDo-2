@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.taskboard.dto.ListMoveRequest;
 import com.example.taskboard.dto.ListRequest;
 import com.example.taskboard.dto.ListResponse;
 import com.example.taskboard.service.ListService;
@@ -47,6 +48,13 @@ public class ListController {
 	@PatchMapping("/{id}")
 	public ListResponse updateList(@PathVariable Long id, @Valid @RequestBody ListRequest request) {
 		return listService.renameList(id, request.name());
+	}
+
+	// PATCH /api/lists/{id}/move: リストを並び替える（成功したら 204）
+	@PatchMapping("/{id}/move")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void moveList(@PathVariable Long id, @Valid @RequestBody ListMoveRequest request) {
+		listService.moveList(id, request.position());
 	}
 
 	// DELETE /api/lists/{id}: リストを削除する（成功したら 204）

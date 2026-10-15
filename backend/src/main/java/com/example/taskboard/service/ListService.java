@@ -1,5 +1,6 @@
 package com.example.taskboard.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -48,6 +49,20 @@ public class ListService {
 	@Transactional
 	public void deleteList(Long id) {
 		taskListRepository.delete(findList(id));
+	}
+
+	// リストを並び替える（左から position 番目に置く）。
+	// ほかのリストも含めて、並び順を 0, 1, 2… に付け直す
+	@Transactional
+	public void moveList(Long id, int position) {
+		TaskList list = findList(id);
+		List<TaskList> lists = new ArrayList<>(taskListRepository.findAllByOrderByPositionAsc());
+		lists.remove(list);
+		int index = Math.min(position, lists.size()); // 最後より後ろを指定されたら、いちばん右に置く
+		lists.add(index, list);
+		for (int i = 0; i < lists.size(); i++) {
+			lists.get(i).changePosition(i);
+		}
 	}
 
 	// 番号でリストを探す。なければ「見つからない」エラー（404）にする
