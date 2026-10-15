@@ -53,7 +53,12 @@ function App() {
         </p>
       )}
       {!loading && !error && (
-        <Board lists={lists} onAddCard={setAddingListId} onEditCard={setEditingCard} />
+        <Board
+          lists={lists}
+          onAddCard={setAddingListId}
+          onEditCard={setEditingCard}
+          onListsChanged={loadBoard}
+        />
       )}
       {addingListId !== null && (
         <CardAddModal
