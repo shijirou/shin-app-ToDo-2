@@ -50,6 +50,19 @@ export async function renameList(id: number, name: string): Promise<TaskList> {
   return res.json()
 }
 
+// リストを並び替える（PATCH /api/lists/{id}/move）
+// position は、左から何番目に置くか（0 から数える）。成功すると本文なし（204）
+export async function moveList(id: number, position: number): Promise<void> {
+  const res = await fetch(`/api/lists/${id}/move`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ position }),
+  })
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, 'リストの移動に失敗しました'))
+  }
+}
+
 // リストを削除する（DELETE /api/lists/{id}）。中のカードも DB から一緒に消える。成功すると本文なし（204）
 export async function deleteList(id: number): Promise<void> {
   const res = await fetch(`/api/lists/${id}`, { method: 'DELETE' })

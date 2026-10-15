@@ -1,5 +1,5 @@
-import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { deleteList, renameList } from '../api'
@@ -21,8 +21,11 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
   const [name, setName] = useState(list.name)
   const [busy, setBusy] = useState(false) // 保存中・削除中
   const [error, setError] = useState<string | null>(null)
-  // リスト全体を「カードを落とせる場所」にする（カードが0枚のリストにも落とせるように）
-  const { setNodeRef } = useDroppable({ id: listDndId(list.id) })
+  // リスト全体を、見出しをつかんで左右に動かせるようにする（機能10）。
+  // 同時に「カードを落とせる場所」にもなる（カードが0枚のリストにも落とせるように）
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: listDndId(list.id),
+  })
 
   const trimmed = name.trim() // 前後の空白は取り除いて送る
   // 空のとき・何も変えていないときは保存できない
@@ -75,7 +78,12 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
   }
 
   return (
-    <section ref={setNodeRef} className="w-64 shrink-0 rounded-md bg-gray-200 p-2">
+    <section
+      ref={setNodeRef}
+      // ドラッグ中、ほかのリストがよけるときの動き
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={`w-64 shrink-0 rounded-md bg-gray-200 p-2 ${isDragging ? 'relative z-10 opacity-80 shadow-lg' : ''}`}
+    >
       {renaming ? (
         <form className="mb-2 flex gap-1" onSubmit={handleRename}>
           <input
@@ -104,7 +112,10 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
         </form>
       ) : (
         <div className="relative flex items-center justify-between pb-2">
-          <h2 className="px-1 font-bold break-all">{list.name}</h2>
+          {/* 見出しの名前の部分をつかむと、リストをドラッグできる */}
+          <h2 className="flex-1 cursor-grab px-1 font-bold break-all" {...attributes} {...listeners}>
+            {list.name}
+          </h2>
           <button
             type="button"
             className="rounded px-2 text-slate-500 hover:bg-gray-300 hover:text-slate-800"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchBoard, moveCard } from './api'
+import { fetchBoard, moveCard, moveList } from './api'
 import Board from './components/Board'
 import CardAddModal from './components/CardAddModal'
 import CardEditModal from './components/CardEditModal'
@@ -37,18 +37,26 @@ function App() {
     loadBoard()
   }
 
-  // カードをドラッグ&ドロップしたら、先に画面を動かしてから保存する。
-  // 保存に失敗したら、元の位置に戻してお知らせを出す
-  function handleMoveCard(newLists: TaskList[], cardId: number, listId: number, position: number) {
+  // ドラッグ&ドロップしたら、先に画面を動かしてから保存する。
+  // 保存に失敗したら、元の位置に戻してお知らせを出す（what は「カード」か「リスト」）
+  function saveMove(newLists: TaskList[], save: () => Promise<void>, what: string) {
     const before = lists
     setLists(newLists)
     setNotice(null)
-    moveCard(cardId, listId, position)
+    save()
       .then(() => loadBoard()) // 保存できたら、念のため DB の内容で読み直す
       .catch((e: Error) => {
         setLists(before)
-        setNotice(`${e.message}。カードを元の位置に戻しました。`)
+        setNotice(`${e.message}。${what}を元の位置に戻しました。`)
       })
+  }
+
+  function handleMoveCard(newLists: TaskList[], cardId: number, listId: number, position: number) {
+    saveMove(newLists, () => moveCard(cardId, listId, position), 'カード')
+  }
+
+  function handleMoveList(newLists: TaskList[], listId: number, position: number) {
+    saveMove(newLists, () => moveList(listId, position), 'リスト')
   }
 
   // カードの更新・削除に成功したら、モーダルを閉じてボードを読み直す
@@ -83,6 +91,7 @@ function App() {
           onEditCard={setEditingCard}
           onListsChanged={loadBoard}
           onMoveCard={handleMoveCard}
+          onMoveList={handleMoveList}
         />
       )}
       {addingListId !== null && (
