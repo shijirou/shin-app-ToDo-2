@@ -1,10 +1,21 @@
 import type { Card } from '../types'
 
-// カード1枚
-function CardItem({ card }: { card: Card }) {
+type Props = {
+  card: Card
+  onEdit: (card: Card) => void // カードを押したとき（編集モーダルを開く）
+}
+
+// カード1枚。押すと編集モーダルが開く
+function CardItem({ card, onEdit }: Props) {
   return (
-    <li className="rounded bg-white px-3 py-2 text-sm shadow-sm">
-      {card.content}
+    <li>
+      <button
+        type="button"
+        className="w-full whitespace-pre-wrap rounded bg-white px-3 py-2 text-left text-sm shadow-sm hover:bg-sky-50"
+        onClick={() => onEdit(card)}
+      >
+        {card.content}
+      </button>
     </li>
   )
 }

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { fetchBoard } from './api'
 import Board from './components/Board'
 import CardAddModal from './components/CardAddModal'
-import type { TaskList } from './types'
+import CardEditModal from './components/CardEditModal'
+import type { Card, TaskList } from './types'
 
 // 画面全体。最初に API からボードを読み込んで表示する
 function App() {
@@ -11,6 +12,8 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   // カード追加モーダルで最初に選ぶリストの番号（null ならモーダルは閉じている）
   const [addingListId, setAddingListId] = useState<number | null>(null)
+  // 編集中のカード（null なら編集モーダルは閉じている）
+  const [editingCard, setEditingCard] = useState<Card | null>(null)
 
   // ボードを API から読み込む（最初の表示と、カードを追加したあとに使う）
   function loadBoard() {
@@ -32,6 +35,12 @@ function App() {
     loadBoard()
   }
 
+  // カードの更新に成功したら、モーダルを閉じてボードを読み直す
+  function handleCardUpdated() {
+    setEditingCard(null)
+    loadBoard()
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 text-slate-800">
       <header className="bg-sky-700 px-4 py-3 text-white">
@@ -43,13 +52,22 @@ function App() {
           {error}。バックエンドと DB が起動しているか確認してください。
         </p>
       )}
-      {!loading && !error && <Board lists={lists} onAddCard={setAddingListId} />}
+      {!loading && !error && (
+        <Board lists={lists} onAddCard={setAddingListId} onEditCard={setEditingCard} />
+      )}
       {addingListId !== null && (
         <CardAddModal
           lists={lists}
           initialListId={addingListId}
           onClose={() => setAddingListId(null)}
           onAdded={handleCardAdded}
+        />
+      )}
+      {editingCard !== null && (
+        <CardEditModal
+          card={editingCard}
+          onClose={() => setEditingCard(null)}
+          onUpdated={handleCardUpdated}
         />
       )}
     </div>
