@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchBoard } from './api'
 import Board from './components/Board'
+import CardAddModal from './components/CardAddModal'
 import type { TaskList } from './types'
 
 // 画面全体。最初に API からボードを読み込んで表示する
@@ -8,13 +9,28 @@ function App() {
   const [lists, setLists] = useState<TaskList[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // カード追加モーダルで最初に選ぶリストの番号（null ならモーダルは閉じている）
+  const [addingListId, setAddingListId] = useState<number | null>(null)
+
+  // ボードを API から読み込む（最初の表示と、カードを追加したあとに使う）
+  function loadBoard() {
+    return fetchBoard()
+      .then((data) => {
+        setLists(data)
+        setError(null)
+      })
+      .catch((e: Error) => setError(e.message))
+  }
 
   useEffect(() => {
-    fetchBoard()
-      .then(setLists)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false))
+    loadBoard().finally(() => setLoading(false))
   }, [])
+
+  // カードの追加に成功したら、モーダルを閉じてボードを読み直す
+  function handleCardAdded() {
+    setAddingListId(null)
+    loadBoard()
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 text-slate-800">
@@ -27,7 +43,15 @@ function App() {
           {error}。バックエンドと DB が起動しているか確認してください。
         </p>
       )}
-      {!loading && !error && <Board lists={lists} />}
+      {!loading && !error && <Board lists={lists} onAddCard={setAddingListId} />}
+      {addingListId !== null && (
+        <CardAddModal
+          lists={lists}
+          initialListId={addingListId}
+          onClose={() => setAddingListId(null)}
+          onAdded={handleCardAdded}
+        />
+      )}
     </div>
   )
 }
