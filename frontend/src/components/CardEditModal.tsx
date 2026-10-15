@@ -1,23 +1,25 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { updateCard } from '../api'
+import { deleteCard, updateCard } from '../api'
 import type { Card } from '../types'
 
 type Props = {
   card: Card // 編集するカード（今の内容を最初から入れておく）
   onClose: () => void
-  onUpdated: () => void // 更新に成功したときに呼ぶ
+  onChanged: () => void // 更新または削除に成功したときに呼ぶ
 }
 
-// カード編集モーダル（内容を書き直して、PATCH で更新する）
-function CardEditModal({ card, onClose, onUpdated }: Props) {
+// カード編集モーダル（内容を書き直して PATCH で更新する。削除もここから行う）
+function CardEditModal({ card, onClose, onChanged }: Props) {
   const [content, setContent] = useState(card.content)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const busy = saving || deleting // 保存中・削除中はどちらのボタンも押せない
   const trimmed = content.trim() // 前後の空白・改行は取り除いて送る
   // 空のとき・何も変えていないときは保存できない
-  const canSubmit = trimmed !== '' && trimmed !== card.content && !saving
+  const canSubmit = trimmed !== '' && trimmed !== card.content && !busy
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault() // ページの再読み込みを止める
@@ -26,10 +28,25 @@ function CardEditModal({ card, onClose, onUpdated }: Props) {
     setError(null)
     try {
       await updateCard(card.id, trimmed)
-      onUpdated()
+      onChanged()
     } catch (err) {
       setError((err as Error).message)
       setSaving(false)
+    }
+  }
+
+  // 削除ボタン。確認して OK なら DB からカードを消す（元に戻せない）
+  async function handleDelete() {
+    if (busy) return
+    if (!window.confirm('このカードを削除しますか？元に戻せません。')) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await deleteCard(card.id)
+      onChanged()
+    } catch (err) {
+      setError((err as Error).message)
+      setDeleting(false)
     }
   }
 
@@ -67,7 +84,15 @@ function CardEditModal({ card, onClose, onUpdated }: Props) {
 
         {error && <p className="mb-3 rounded bg-red-100 p-2 text-sm text-red-700">{error}</p>}
 
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <button
+            type="button"
+            className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-300"
+            onClick={handleDelete}
+            disabled={busy}
+          >
+            {deleting ? '削除中…' : '削除'}
+          </button>
           <button
             type="submit"
             className="rounded bg-sky-700 px-4 py-2 text-white hover:bg-sky-800 disabled:bg-gray-300"
