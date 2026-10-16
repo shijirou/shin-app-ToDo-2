@@ -2,6 +2,7 @@ package com.example.taskboard.repository;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -12,6 +13,12 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long> {
 
 	// すべてのリストを並び順（position の小さい順）で取得する
 	List<TaskList> findAllByOrderByPositionAsc();
+
+	// ボード表示用。リストと中のカードを、1回の SQL でまとめて取得する
+	// （リストごとにカードを読みに行くと、リストの数だけ SQL が走ってしまう＝N+1 問題）
+	@EntityGraph(attributePaths = "cards")
+	@Query("select l from TaskList l order by l.position")
+	List<TaskList> findAllWithCards();
 
 	// いちばん大きい position を調べる（リストが1つもないときは -1）
 	@Query("select coalesce(max(l.position), -1) from TaskList l")

@@ -15,13 +15,16 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 // cards テーブル（カード＝タスク）に対応するクラス
 @Entity
-@Table(name = "cards")
+// list_id に索引（インデックス）を付ける。「このリストのカード」を探すときに、全部のカードを見て回らなくてすむ
+// （PostgreSQL は、外部キーの列に自動では索引を作らない）
+@Table(name = "cards", indexes = @Index(name = "idx_cards_list_id", columnList = "list_id"))
 public class Card {
 
 	@Id

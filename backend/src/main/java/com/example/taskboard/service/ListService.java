@@ -24,7 +24,7 @@ public class ListService {
 	// すべてのリストを、中のカードと一緒に並び順で取得する
 	@Transactional(readOnly = true)
 	public List<ListResponse> getBoard() {
-		return taskListRepository.findAllByOrderByPositionAsc().stream()
+		return taskListRepository.findAllWithCards().stream()
 				.map(ListResponse::from)
 				.toList();
 	}

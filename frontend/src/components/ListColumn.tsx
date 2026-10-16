@@ -91,7 +91,7 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
             maxLength={100}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && cancelRename()} // Esc でやめる
+            onKeyDown={(e) => e.key === 'Escape' && !e.nativeEvent.isComposing && cancelRename()} // Esc でやめる（日本語の変換中は除く）
             autoFocus
           />
           <button
@@ -112,9 +112,12 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
         </form>
       ) : (
         <div className="relative flex items-center justify-between pb-2">
-          {/* 見出しの名前の部分をつかむと、リストをドラッグできる */}
-          <h2 className="flex-1 cursor-grab px-1 font-bold break-all" {...attributes} {...listeners}>
-            {list.name}
+          {/* 見出しの名前の部分をつかむと、リストをドラッグできる。
+              つかむための設定は h2 の中の span に付ける（h2 に付けると「見出し」ではなく「ボタン」扱いになってしまうため） */}
+          <h2 className="flex-1 px-1 font-bold break-all">
+            <span className="block cursor-grab" {...attributes} {...listeners}>
+              {list.name}
+            </span>
           </h2>
           <button
             type="button"
@@ -127,7 +130,8 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
           </button>
           {menuOpen && (
             <>
-              {/* メニューの外を押したら閉じるための、見えない幕 */}
+              {/* メニューの外を押したら閉じるための、見えない幕（キーボードでは「…」ボタンをもう一度押して閉じる） */}
+              {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
               <ul className="absolute top-8 right-0 z-20 w-40 rounded bg-white py-1 text-sm shadow-lg">
                 <li>

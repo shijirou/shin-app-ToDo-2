@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { PRIORITIES } from '../priority'
 import type { Priority } from '../types'
 
@@ -8,10 +9,15 @@ type Props = {
 
 // 重要度の選択欄（カード追加・編集モーダルで使う）
 function PrioritySelect({ value, onChange }: Props) {
+  const id = useId() // 見出し（label）と選択欄をつなぐための名前
+
   return (
     <>
-      <label className="mb-1 block text-sm">重要度</label>
+      <label htmlFor={id} className="mb-1 block text-sm">
+        重要度
+      </label>
       <select
+        id={id}
         className="mb-3 w-full rounded border border-gray-300 p-2"
         value={value}
         onChange={(e) => onChange(e.target.value as Priority)}
