@@ -58,7 +58,7 @@ function ListAddForm({ onAdded }: Props) {
         maxLength={100}
         value={name}
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => e.key === 'Escape' && close()} // Esc でやめる
+        onKeyDown={(e) => e.key === 'Escape' && !e.nativeEvent.isComposing && close()} // Esc でやめる（日本語の変換中は除く）
         autoFocus
       />
       {error && <p className="mb-2 rounded bg-red-100 p-2 text-sm text-red-700">{error}</p>}
