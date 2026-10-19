@@ -1,14 +1,28 @@
 import {
   closestCenter,
+  closestCorners,
   DndContext,
   DragOverlay,
+  KeyboardSensor,
   PointerSensor,
   pointerWithin,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
-import { arrayMove, horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable'
+import type {
+  Announcements,
+  CollisionDetection,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  KeyboardCoordinateGetter,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  horizontalListSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
 import { useState } from 'react'
 import { findCardPlace, findListId, listDndId, moveCardInLists, parseDndId } from '../dnd'
 import type { Card, TaskList } from '../types'
@@ -20,7 +34,8 @@ type Props = {
   lists: TaskList[]
   onAddCard: (listId: number) => void // 「＋ カードを追加」を押したことを App に伝える
   onEditCard: (card: Card) => void // カードを押したことを App に伝える
-  onListsChanged: () => void // リストの追加・名前の変更・削除に成功したことを App に伝える
+  onListsChanged: () => void // リストの追加・名前の変更に成功したことを App に伝える
+  onListDeleted: (listId: number) => void // リストの削除に成功したことを App に伝える
   // カードを落としたとき、動かしたあとのボードと、カードの行き先を App に伝える
   onMoveCard: (newLists: TaskList[], cardId: number, listId: number, position: number) => void
   // リストを落としたとき、動かしたあとのボードと、リストの行き先を App に伝える
@@ -31,6 +46,7 @@ type Props = {
 // - リストをつかんでいるとき: いちばん近いリスト（カードは見ない）
 // - カードをつかんでいるとき: マウスの先にあるカードを優先し、なければマウスの先のリスト。
 //   リストの外ならどこにも当たらない（落とすとカードは元の位置に戻る）
+// - キーボードで動かしているとき（マウスの位置がない）: つかんでいるカードにいちばん近いもの
 const collisionDetection: CollisionDetection = (args) => {
   if (parseDndId(args.active.id).kind === 'list') {
     return closestCenter({
@@ -38,20 +54,61 @@ const collisionDetection: CollisionDetection = (args) => {
       droppableContainers: args.droppableContainers.filter((c) => parseDndId(c.id).kind === 'list'),
     })
   }
+  if (!args.pointerCoordinates) return closestCorners(args)
   const hits = pointerWithin(args)
   const cardHit = hits.find((hit) => parseDndId(hit.id).kind === 'card')
   return cardHit ? [cardHit] : hits
 }
 
+// キーボードの操作（L-3）: スペースキーでつかむ・置く、矢印キーで動かす、Esc でやめる。
+// Enter はカードの編集画面を開くのに使っているので、つかむ操作には使わない
+const keyboardCodes = { start: ['Space'], end: ['Space'], cancel: ['Escape'] }
+
+// 矢印キーを押したときの行き先を決める。基本は dnd-kit の sortableKeyboardCoordinates に任せるが、
+// ←→ のときは同じ列（同じリスト）のカードを候補から外す。
+// dnd-kit は「少しでも右（左）にあるもの」を候補にするため、つかんだカードを傾けて表示していると
+// 位置が数 px ずれて、同じリストのカードへ動いてしまうことがあるため
+const coordinateGetter: KeyboardCoordinateGetter = (event, args) => {
+  const { droppableContainers, droppableRects, collisionRect } = args.context
+  if ((event.code !== 'ArrowLeft' && event.code !== 'ArrowRight') || !collisionRect) {
+    return sortableKeyboardCoordinates(event, args)
+  }
+  const otherColumns = droppableContainers.getEnabled().filter((container) => {
+    const rect = droppableRects.get(container.id)
+    return rect && Math.abs(rect.left - collisionRect.left) > collisionRect.width / 2
+  })
+  // sortableKeyboardCoordinates が使うのは getEnabled と get だけなので、その2つを持つ入れ物で渡す
+  const narrowed = {
+    getEnabled: () => otherColumns,
+    get: (id: Parameters<typeof droppableContainers.get>[0]) => droppableContainers.get(id),
+  } as unknown as typeof droppableContainers
+  return sortableKeyboardCoordinates(event, { ...args, context: { ...args.context, droppableContainers: narrowed } })
+}
+
+// 読み上げソフト向けの案内（dnd-kit の初期値は英語なので日本語にする）
+const screenReaderInstructions = {
+  draggable: 'スペースキーでつかみ、矢印キーで動かして、もう一度スペースキーで置きます。Esc キーでやめます。',
+}
+const announcements: Announcements = {
+  onDragStart: () => 'つかみました。矢印キーで動かせます。',
+  onDragOver: ({ over }) => (over ? '動かしています。' : '置ける場所の外です。'),
+  onDragEnd: ({ over }) => (over ? '置きました。' : '元の場所に戻しました。'),
+  onDragCancel: () => 'やめました。元の場所に戻しました。',
+}
+
 // ボード全体（リストを横に並べ、右端に「＋ リストを追加」を置く）。カードのドラッグ&ドロップもここで扱う
-function Board({ lists, onAddCard, onEditCard, onListsChanged, onMoveCard, onMoveList }: Props) {
+function Board({ lists, onAddCard, onEditCard, onListsChanged, onListDeleted, onMoveCard, onMoveList }: Props) {
   // ドラッグ中だけ使う、画面に出すボード（カードを別のリストの上に持っていくと、その場で入れかえて見せる）
   const [dragLists, setDragLists] = useState<TaskList[] | null>(null)
   const [activeCard, setActiveCard] = useState<Card | null>(null) // つかんでいるカード
   const shown = dragLists ?? lists
 
-  // 5px 以上動かしたときだけドラッグにする（ただ押しただけなら、今までどおり編集モーダルが開く）
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  // マウス: 5px 以上動かしたときだけドラッグにする（ただ押しただけなら、今までどおり編集モーダルが開く）
+  // キーボード: 上の keyboardCodes のキーで操作する
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter, keyboardCodes }),
+  )
 
   function handleDragStart({ active }: DragStartEvent) {
     const { kind, id } = parseDndId(active.id)
@@ -129,6 +186,7 @@ function Board({ lists, onAddCard, onEditCard, onListsChanged, onMoveCard, onMov
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
+      accessibility={{ screenReaderInstructions, announcements }}
     >
       <div className="flex items-start gap-3 overflow-x-auto p-4">
         {/* この中のリストは、ドラッグで左右に並び替えられる */}
@@ -140,6 +198,7 @@ function Board({ lists, onAddCard, onEditCard, onListsChanged, onMoveCard, onMov
               onAddCard={onAddCard}
               onEditCard={onEditCard}
               onListChanged={onListsChanged}
+              onListDeleted={onListDeleted}
             />
           ))}
         </SortableContext>

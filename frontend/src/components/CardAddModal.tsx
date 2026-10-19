@@ -63,9 +63,10 @@ function CardAddModal({ lists, initialListId, onClose, onAdded }: Props) {
         id={contentId}
         className="mb-3 w-full rounded border border-gray-300 p-2"
         rows={3}
+        maxLength={1000}
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        autoFocus
+        data-autofocus
       />
 
       <PrioritySelect value={priority} onChange={setPriority} />

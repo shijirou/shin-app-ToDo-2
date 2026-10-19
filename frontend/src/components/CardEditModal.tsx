@@ -8,11 +8,12 @@ import PrioritySelect from './PrioritySelect'
 type Props = {
   card: Card // 編集するカード（今の内容を最初から入れておく）
   onClose: () => void
-  onChanged: () => void // 更新または削除に成功したときに呼ぶ
+  onChanged: () => void // 更新に成功したときに呼ぶ
+  onDeleted: (cardId: number) => void // 削除に成功したときに呼ぶ
 }
 
 // カード編集モーダル（内容を書き直して PATCH で更新する。削除もここから行う）
-function CardEditModal({ card, onClose, onChanged }: Props) {
+function CardEditModal({ card, onClose, onChanged, onDeleted }: Props) {
   const [content, setContent] = useState(card.content)
   const [priority, setPriority] = useState<Priority>(card.priority)
   const [saving, setSaving] = useState(false)
@@ -50,7 +51,7 @@ function CardEditModal({ card, onClose, onChanged }: Props) {
     setError(null)
     try {
       await deleteCard(card.id)
-      onChanged()
+      onDeleted(card.id)
     } catch (err) {
       setError((err as Error).message)
       setDeleting(false)
@@ -66,9 +67,10 @@ function CardEditModal({ card, onClose, onChanged }: Props) {
         id={contentId}
         className="mb-3 w-full rounded border border-gray-300 p-2"
         rows={3}
+        maxLength={1000}
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        autoFocus
+        data-autofocus
       />
 
       <PrioritySelect value={priority} onChange={setPriority} />

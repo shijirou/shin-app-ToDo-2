@@ -1,0 +1,61 @@
+# 自動テスト（CI）の設定
+# PR を作ったとき・PR に追加でプッシュしたとき・main が更新されたときに、GitHub 上で次を自動で動かす
+# - 画面: lint（コードの書き方のチェック）・テスト・ビルド
+# - API: テスト（「起動できるか」のテストのために、PostgreSQL もその場だけ起動する）
+# 結果は PR の画面の下の方に、✓（成功）か ×（失敗）で表示される
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  frontend:
+    name: 画面（lint・テスト・ビルド）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24 # Node.js の LTS 版（パソコンと同じ 24 系）
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci # package-lock.json どおりの版を入れる
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  backend:
+    name: API（テスト）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    # テストのあいだだけ動かす PostgreSQL（compose.yaml と同じ版・同じ接続情報）
+    services:
+      db:
+        image: postgres:18
+        env:
+          POSTGRES_DB: taskboard
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        # DB が接続を受け付けられるようになるまで待つ
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin # パソコンと同じ Eclipse Temurin
+          java-version: 25 # Java の LTS 版
+      - uses: gradle/actions/setup-gradle@v6
+      - run: ./gradlew test
