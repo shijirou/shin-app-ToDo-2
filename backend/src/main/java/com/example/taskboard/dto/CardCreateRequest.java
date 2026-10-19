@@ -13,4 +13,9 @@ public record CardCreateRequest(
 		@NotBlank(message = "カードの内容を入力してください")
 		String content,
 		Priority priority) {
+
+	// 受け取ったときに前後の空白・改行（全角の空白も含む）を取り除く
+	public CardCreateRequest {
+		content = content != null ? content.strip() : null;
+	}
 }
