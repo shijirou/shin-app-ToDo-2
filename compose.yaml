@@ -9,7 +9,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      # 127.0.0.1 を付けて、このパソコンからだけ接続できるようにする（同じ Wi-Fi のほかのパソコンからは接続できない）
+      - "127.0.0.1:5432:5432"
     volumes:
       - taskboard-db-data:/var/lib/postgresql
 

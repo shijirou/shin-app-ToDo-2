@@ -17,24 +17,41 @@ function App() {
   // 画面の上に出すお知らせ（カードの移動に失敗したときなど）
   const [notice, setNotice] = useState<string | null>(null)
 
-  // ボードを API から読み込む（最初の表示と、カードを追加したあとに使う）
-  function loadBoard() {
-    return fetchBoard()
-      .then((data) => {
-        setLists(data)
-        setError(null)
-      })
+  // 最初の読み込み。失敗したらボードの代わりにエラーを出す（［再読み込み］でやり直せる）
+  function loadInitial() {
+    fetchBoard()
+      .then(setLists)
       .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => {
-    loadBoard().finally(() => setLoading(false))
+    loadInitial()
   }, [])
+
+  // エラーの［再読み込み］を押したとき。「読み込み中…」に戻してから読み直す
+  function retryInitial() {
+    setLoading(true)
+    setError(null)
+    loadInitial()
+  }
+
+  // 操作のあとの読み直し。失敗してもボードは消さず、上のお知らせで伝える
+  function reloadBoard() {
+    fetchBoard()
+      .then((data) => {
+        setLists(data)
+        setNotice(null)
+      })
+      .catch((e: Error) =>
+        setNotice(`${e.message}。画面が最新でないかもしれません。少し待ってから［再読み込み］を押してください。`),
+      )
+  }
 
   // カードの追加に成功したら、モーダルを閉じてボードを読み直す
   function handleCardAdded() {
     setAddingListId(null)
-    loadBoard()
+    reloadBoard()
   }
 
   // ドラッグ&ドロップしたら、先に画面を動かしてから保存する。
@@ -43,12 +60,12 @@ function App() {
     const before = lists
     setLists(newLists)
     setNotice(null)
-    save()
-      .then(() => loadBoard()) // 保存できたら、念のため DB の内容で読み直す
-      .catch((e: Error) => {
-        setLists(before)
-        setNotice(`${e.message}。${what}を元の位置に戻しました。`)
-      })
+    // 保存できたら、念のため DB の内容で読み直す。
+    // 読み直しの失敗を「保存の失敗」とまちがえないように、then の2つ目で保存の失敗だけを受け取る
+    save().then(reloadBoard, (e: Error) => {
+      setLists(before)
+      setNotice(`${e.message}。${what}を元の位置に戻しました。`)
+    })
   }
 
   function handleMoveCard(newLists: TaskList[], cardId: number, listId: number, position: number) {
@@ -62,7 +79,7 @@ function App() {
   // カードの更新・削除に成功したら、モーダルを閉じてボードを読み直す
   function handleCardChanged() {
     setEditingCard(null)
-    loadBoard()
+    reloadBoard()
   }
 
   return (
@@ -72,24 +89,32 @@ function App() {
       </header>
       {loading && <p className="p-4">読み込み中…</p>}
       {error && (
-        <p className="m-4 rounded bg-red-100 p-3 text-red-700">
-          {error}。バックエンドと DB が起動しているか確認してください。
-        </p>
+        <div className="m-4 flex flex-wrap items-center gap-3 rounded bg-red-100 p-3 text-red-700">
+          <p>{error}。バックエンドと DB が起動しているか確認してください。</p>
+          <button type="button" className="rounded bg-white px-3 py-1 hover:bg-red-50" onClick={retryInitial}>
+            再読み込み
+          </button>
+        </div>
       )}
       {notice && (
-        <p className="mx-4 mt-4 flex items-start justify-between gap-2 rounded bg-red-100 p-3 text-red-700">
-          {notice}
-          <button type="button" className="px-1" onClick={() => setNotice(null)} aria-label="お知らせを閉じる">
-            ×
-          </button>
-        </p>
+        <div className="mx-4 mt-4 flex items-start justify-between gap-2 rounded bg-red-100 p-3 text-red-700">
+          <p>{notice}</p>
+          <div className="flex shrink-0 gap-1">
+            <button type="button" className="rounded bg-white px-3 py-1 hover:bg-red-50" onClick={reloadBoard}>
+              再読み込み
+            </button>
+            <button type="button" className="px-1" onClick={() => setNotice(null)} aria-label="お知らせを閉じる">
+              ×
+            </button>
+          </div>
+        </div>
       )}
       {!loading && !error && (
         <Board
           lists={lists}
           onAddCard={setAddingListId}
           onEditCard={setEditingCard}
-          onListsChanged={loadBoard}
+          onListsChanged={reloadBoard}
           onMoveCard={handleMoveCard}
           onMoveList={handleMoveList}
         />
