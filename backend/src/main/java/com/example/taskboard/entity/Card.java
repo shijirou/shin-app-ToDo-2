@@ -2,6 +2,7 @@ package com.example.taskboard.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -41,8 +42,11 @@ public class Card {
 	private String content;
 
 	// 重要度。DB 側にも初期値 'MEDIUM' を付けておくので、この列を足す前からあるカードは「中」になる
+	// （初期値は @ColumnDefault で付ける。columnDefinition に DEFAULT まで書くと、表を自動で直す機能が
+	//   起動のたびに「型の変更」として PostgreSQL では文法エラーになる SQL を出してしまうため）
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, columnDefinition = "VARCHAR(10) DEFAULT 'MEDIUM'")
+	@ColumnDefault("'MEDIUM'")
+	@Column(nullable = false, length = 10)
 	private Priority priority = Priority.MEDIUM;
 
 	@Column(nullable = false)
