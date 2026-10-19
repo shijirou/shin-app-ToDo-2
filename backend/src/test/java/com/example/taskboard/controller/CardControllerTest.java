@@ -59,6 +59,26 @@ class CardControllerTest {
 	}
 
 	@Test
+	void 内容が1001文字なら400と_文字数のメッセージが返る() throws Exception {
+		mockMvc.perform(post("/api/cards").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":1,\"content\":\"" + "あ".repeat(1001) + "\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("カードの内容は1000文字以内で入力してください"));
+		verify(cardService, never()).createCard(anyLong(), any(), any());
+	}
+
+	@Test
+	void 内容が1000文字ちょうどなら更新できる() throws Exception {
+		String content = "あ".repeat(1000);
+		when(cardService.updateCard(1L, content, null)).thenReturn(new CardResponse(1L, content, Priority.MEDIUM, 0));
+
+		mockMvc.perform(patch("/api/cards/1").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"content\":\"" + content + "\"}"))
+				.andExpect(status().isOk());
+		verify(cardService).updateCard(1L, content, null);
+	}
+
+	@Test
 	void 決まっていない重要度なら400と_重要度の説明が返る() throws Exception {
 		mockMvc.perform(post("/api/cards").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"listId\":1,\"content\":\"買い物\",\"priority\":\"URGENT\"}"))

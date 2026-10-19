@@ -11,11 +11,12 @@ type Props = {
   list: TaskList
   onAddCard: (listId: number) => void // 「＋ カードを追加」を押したとき
   onEditCard: (card: Card) => void // カードを押したとき
-  onListChanged: () => void // リストの名前の変更・削除に成功したとき
+  onListChanged: () => void // リストの名前の変更に成功したとき
+  onListDeleted: (listId: number) => void // リストの削除に成功したとき
 }
 
 // リスト1列（見出しと、中のカード）
-function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
+function ListColumn({ list, onAddCard, onEditCard, onListChanged, onListDeleted }: Props) {
   const [menuOpen, setMenuOpen] = useState(false) // 「…」メニューが開いているか
   const [renaming, setRenaming] = useState(false) // 見出しが入力欄になっているか
   const [name, setName] = useState(list.name)
@@ -70,7 +71,7 @@ function ListColumn({ list, onAddCard, onEditCard, onListChanged }: Props) {
     setError(null)
     try {
       await deleteList(list.id)
-      onListChanged() // 読み直すと、このリストは画面から消える
+      onListDeleted(list.id) // 画面からすぐ消す（読み直しに失敗しても、消したリストが残らないように）
     } catch (err) {
       setError((err as Error).message)
       setBusy(false)

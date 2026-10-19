@@ -76,9 +76,22 @@ function App() {
     saveMove(newLists, () => moveList(listId, position), 'リスト')
   }
 
-  // カードの更新・削除に成功したら、モーダルを閉じてボードを読み直す
+  // カードの更新に成功したら、モーダルを閉じてボードを読み直す
   function handleCardChanged() {
     setEditingCard(null)
+    reloadBoard()
+  }
+
+  // 削除に成功したら、読み直しを待たずに画面からすぐ消してから読み直す
+  // （読み直しに失敗しても、消したものが画面に残らないように）
+  function handleCardDeleted(cardId: number) {
+    setEditingCard(null)
+    setLists((prev) => prev.map((list) => ({ ...list, cards: list.cards.filter((card) => card.id !== cardId) })))
+    reloadBoard()
+  }
+
+  function handleListDeleted(listId: number) {
+    setLists((prev) => prev.filter((list) => list.id !== listId))
     reloadBoard()
   }
 
@@ -115,6 +128,7 @@ function App() {
           onAddCard={setAddingListId}
           onEditCard={setEditingCard}
           onListsChanged={reloadBoard}
+          onListDeleted={handleListDeleted}
           onMoveCard={handleMoveCard}
           onMoveList={handleMoveList}
         />
@@ -132,6 +146,7 @@ function App() {
           card={editingCard}
           onClose={() => setEditingCard(null)}
           onChanged={handleCardChanged}
+          onDeleted={handleCardDeleted}
         />
       )}
     </div>
