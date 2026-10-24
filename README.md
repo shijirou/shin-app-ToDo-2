@@ -161,26 +161,26 @@ npm install   # 画面で使う部品（React・dnd-kit など）を入れる
 - Gradle: Spring Boot の公式ひな形作成サイト（Spring Initializr）で標準的に選べるビルドツール。設定ファイルが短く読みやすい。「Gradle Wrapper」が付いてくるため、Gradle 本体を別途インストールしなくてよい
 
 #### 使用バージョン
-（フロントエンドは 2026-10-14、それ以外は 2026-10-16 時点。方針: 正式公開された安定版の最新を使う。Java と Node.js は長期サポート版（LTS）の最新）
+（2026-10-24 時点。方針: 正式公開された安定版の最新を使う。Java と Node.js は長期サポート版（LTS）の最新）
 
 | 分類 | ソフトウェア | バージョン | メモ |
 |---|---|---|---|
 | フロントエンド | React / React DOM | 19.3.1 | 2026-10-17 の品質チェックで 19.3.0 から更新（Issue #45） |
 | フロントエンド | TypeScript | 7.0.2 | 最新を確認済み（Issue #19 で 6.0.3 から更新） |
-| フロントエンド | Vite | 8.3.4 | 最新を確認済み |
+| フロントエンド | Vite | 8.3.5 | 最新を確認済み（Issue #59 で 8.3.4 から更新） |
 | フロントエンド | Tailwind CSS | 4.3.3 | 最新を確認済み |
-| フロントエンド | oxlint | 1.88.0 | コードの書き方のチェック（学習動画の ESLint の代わり）。最新を確認済み |
+| フロントエンド | oxlint | 1.89.0 | コードの書き方のチェック（学習動画の ESLint の代わり）。最新を確認済み（Issue #59 で 1.88.0 から更新） |
 | フロントエンド | dnd-kit（core / sortable / utilities） | 6.3.1 / 10.0.0 / 3.2.2 | 2026-10-16 に最新の正式版を入れた（Issue #37）。新しい `@dnd-kit/react` は 0.5.1 で正式版（1.0）前なので使わない |
 | フロントエンド | Vitest | 5.0.5 | 画面の自動テストの道具。2026-10-19 に最新の正式版を入れた（Issue #51） |
-| 開発ツール | Node.js / npm | 24.20.0 / 11.19.0 | Node.js は LTS 版。`@types/node` はこれに合わせて 24 系。**新しい LTS 24.22.0 あり（パソコンへのインストールで更新する）** |
-| バックエンド | Java（Eclipse Temurin） | 25.0.4.1 | LTS 版。最新を確認済み（Java 27 も出ているが LTS ではない） |
-| バックエンド | Spring Boot | 4.1.1 | 最新を確認済み（4.2.0-M2 は M 版＝試作版なので使わない） |
+| 開発ツール | Node.js / npm | 24.22.1 / 11.19.0 | Node.js は LTS 版。`@types/node` はこれに合わせて 24 系。Issue #59 で 24.20.0 から更新（2026-10-21 発表の脆弱性 CVE-2026-111497 などの修正版）。npm 12 はメジャー更新なので入れない |
+| バックエンド | Java（Eclipse Temurin） | 25.0.4.1 | LTS 版。Windows 用の最新を確認済み（25.0.5 は Windows 版がまだ配られていない。出たら入れる） |
+| バックエンド | Spring Boot | 4.1.2 | 最新を確認済み（Issue #59 で 4.1.1 から更新） |
 | バックエンド | Spring Dependency Management（Gradle の部品） | 1.1.7 | 最新を確認済み |
-| バックエンド | Gradle（Gradle Wrapper） | 9.8.1 | 最新を確認済み（Issue #25 で 9.7.1 から更新） |
+| バックエンド | Gradle（Gradle Wrapper） | 9.8.2 | 最新を確認済み（Issue #59 で 9.8.1 から更新） |
 | データベース | PostgreSQL | 18.6 | Docker のイメージ `postgres:18`。最新を確認済み（19 はまだβ版） |
-| 開発ツール | Docker Desktop（Docker Engine） | 4.93.0（29.8.1） | **新しい版 4.95.0 あり（Docker Desktop の画面から更新する）** |
+| 開発ツール | Docker Desktop（Docker Engine） | 4.93.0（29.8.1） | **新しい版 4.95.0 あり（Docker Desktop の画面から更新する）**。2026-10-24 は版の確認だけ |
 
-- 「最新を確認済み」は、フロントエンドは 2026-10-14 に `npm outdated` で、それ以外は 2026-10-16 に公式の配布元（Maven Central・Gradle・Adoptium・Node.js・Docker Hub・Docker のリリースノート）で最新版と比べた結果。
+- 「最新を確認済み」は、2026-10-24 に、フロントエンドは `npm outdated` と `npm audit`（脆弱性 0 件）で、それ以外は公式の配布元（Maven Central・Gradle・Adoptium・Node.js・Docker Hub・Docker のリリースノート）で最新版と比べた結果。
 - 調べ方: フロントエンドは `frontend` で `npm ls --depth=0`（入っている版）と `npm outdated`（新しい版があるか）。Java は `java -version`、Node.js は `node -v`、Gradle は `backend` で `.\gradlew.bat --version`、PostgreSQL は `docker exec taskboard-db psql -U postgres -c "SELECT version();"`、Docker は `docker version`。
 - Gradle の更新方法: `backend` で `.\gradlew.bat wrapper --gradle-version <版>`。`gradle/wrapper/gradle-wrapper.properties` の版の番号が書き換わる。
 
@@ -333,8 +333,9 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
 - 自動テストを追加した（Issue #51、簡易レビューの指摘 M-2）。サーバーは1件 → 24件、画面は0件 → 12件。動かし方は[自動テストを動かす](#自動テストを動かす)。
 - 簡易レビューの残りの指摘 L-1〜L-5 を直した（Issue #53）。削除したリスト・カードを画面からすぐ消す、重要度の「高・中・低」の札、キーボードでの並び替えと `<dialog>` のモーダル、カードの内容の上限（1000文字）、GitHub Actions でのテストの自動実行。
 - 簡易レビュー報告書を見直した（Issue #57）。各章に書き足していた「修正済み」の文を消してレビュー時点の文に戻し、直したことは最後の「8. レビュー後の対応」の表1つにまとめた。重なっていた文も消して短くした。
+- 使っている道具のバージョンを更新した（Issue #59）。Node.js 24.22.1、Spring Boot 4.1.2、Gradle 9.8.2 など。テストはすべて成功。
 
-### 次回の再開メモ（2026-10-19時点）
+### 次回の再開メモ（2026-10-24時点）
 - **今の状態**: **アプリは完成**（要件の機能1〜10、2026-10-16）。そのあと、品質チェック（Issue #45、10-17）と、2回の簡易レビュー（Issue #47・#49、10-19）を行い、見つかった問題はすべて直した。2回目の簡易レビューの結果は[報告書](https://claude.ai/artifact/TxXTD5KFSWWvAgKxYF7H89)にまとめ、指摘7件はすべて対応済み（AIエンジニア学習の課題のレポートに使用）。
   - 自動テストは38件（API 26件・画面 12件）。動かし方は[自動テストを動かす](#自動テストを動かす)。
   - GitHub Actions で、PR を作るたび・main が更新されるたびに、lint・テスト・ビルドが GitHub 上で自動で動く。PR の画面に ✓ が出ているのを確かめてからマージする。
@@ -342,7 +343,7 @@ main への直接プッシュは、Claude Code の設定（`.claude/`）と GitH
   - 報告書のリンクは、共有するまで本人しか開けない。講師などに見せるときは、報告書の画面の共有メニューから共有する。
 - **次回はここから**:
   1. 追加でやりたいことがあれば、要件定義の更新 → Issue → ブランチ → PR の流れで進める。
-  2. （必要なら）Node.js を 24.22.0 に、Docker Desktop を 4.95.0 に更新し、[使用バージョン](#使用バージョン)の表を直す。
+  2. （必要なら）Java の 25.0.5 の Windows 版が出ていたら入れる。Docker Desktop を 4.95.0 に更新する。どちらも済んだら[使用バージョン](#使用バージョン)の表を直す。
   3. （必要なら）残っている改善に取り組む。[品質チェックの記録](docs/quality-review.md)の「今後の改善」11件のうち、済んだのは5件（テストを増やす・`<dialog>`・キーボード操作・カードの内容の上限・GitHub Actions）。残りは次のとおりで、どれも今の使い方（自分のパソコンで1人で使う）では困らない。
      - テストのときだけ DB を自動で用意する（Testcontainers）。今は「起動できるか」のテスト1件だけ DB の起動が必要
      - 表の変更を SQL ファイルで管理する（Flyway）。今は `ddl-auto=update` の自動変更
