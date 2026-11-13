@@ -1,0 +1,8 @@
+# 秘密の情報（パスワード・APIキーなど）を置くファイルは GitHub に載せない
+.env
+.env.*
+!.env.example
+
+# 鍵ファイル
+*.pem
+*.key
