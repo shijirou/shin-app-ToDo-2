@@ -7,15 +7,17 @@ $data = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $command = $data.tool_input.command
 if (-not $command) { exit 0 }
 
-# main へ直接プッシュするコマンドは、どのブランチにいても止める
-if ($command -match 'git\s+push\b.*\s(\S+:)?main\b') {
-    [Console]::Error.WriteLine('main へ直接プッシュすることは禁止されています。作業ブランチをプッシュして PR を作ってください（CLAUDE.md 参照）。')
-    exit 2
-}
+# main へ直接プッシュするコマンドか（どのブランチにいても止める。ただし止めるのは、行き先を調べたあと）
+$pushMain = $command -match 'git\s+push\b.*\s(\S+:)?main\b'
+$pushMainMessage = 'main へ直接プッシュすることは禁止されています。作業ブランチをプッシュして PR を作ってください（CLAUDE.md 参照）。'
 
 # git commit / git push のコマンドでなければ何もしない
 $m = [regex]::Match($command, '(^|[;&|(]\s*)git(\s+-C\s+("[^"]+"|''[^'']+''|\S+))?\s+(commit|push)\b')
-if (-not $m.Success) { exit 0 }
+if (-not $m.Success) {
+    # 行き先が読み取れない書き方で main へのプッシュらしいものは、安全側で止める
+    if ($pushMain) { [Console]::Error.WriteLine($pushMainMessage); exit 2 }
+    exit 0
+}
 
 $dir = $data.cwd
 if (-not $dir) { $dir = (Get-Location).Path }
@@ -43,6 +45,9 @@ if ($target) {
 $projectRoot = git -C $dir rev-parse --show-toplevel 2>$null
 $targetRoot = git -C $checkDir rev-parse --show-toplevel 2>$null
 if ($projectRoot -and $targetRoot -and ($projectRoot -ine $targetRoot)) { exit 0 }
+
+# このプロジェクトの main へのプッシュは、どのブランチにいても止める
+if ($pushMain) { [Console]::Error.WriteLine($pushMainMessage); exit 2 }
 
 $branch = git -C $checkDir branch --show-current 2>$null
 if ($branch -eq 'main') {
